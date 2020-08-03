@@ -1,6 +1,14 @@
 [
   
     {
+      "title"    : "OOP Basics",
+      "category" : "",
+      "tags"     : "OOP",
+      "url"      : "/blog/oop-basics",
+      "date"     : "2020-05-05 00:00:00 -0400"
+    } ,
+  
+    {
       "title"    : "Digital Minimalism",
       "category" : "",
       "tags"     : "Social Media, Minimalism, Technology",

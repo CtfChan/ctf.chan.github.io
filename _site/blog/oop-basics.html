@@ -45,9 +45,9 @@
   </button>
 
   <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-    <div class="navbar-nav ml-auto"><a class="nav-item nav-link active" href="/projects/">Projects</a>
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
 
-      <a class="nav-item nav-link " href="/blog/">Blog</a>
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
 
       <a class="nav-item nav-link " href="/about/">About</a>
 
@@ -58,11 +58,39 @@
 
 </nav>
   <div class="col-lg-10 mx-auto mt-5 post">
-  <h1 id="robot-exploration">Robot Exploration</h1>
+  <h1><b>OOP Basics</b></h1>
 
-<p><img src="/assets/costmap_implementation.png" alt="" /></p>
+<p class="post-metadata text-muted">
+  05 May 2020 -  
+  <b>2 mins read time</b>
 
-<p>This was a group project for the course MIE443 at UofT. The objective of the project was to program a Turtlebot to autonomously explore a maze and map it using Gmapping. Our design used a combination of frontier exploration, bug algorithm and A* to explore it’s environment.</p>
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#oop">
+      <span class="tag badge badge-pill text-primary border border-primary">OOP</span>
+    </a>
+    </p>
+
+<p><img src="https://unsplash.com/photos/ieic5Tq8YMk" alt="" /></p>
+
+<p>Object-oriented programming (OOP) is programming paradigm based on based on wrapping data and behaviour into bundles (or objects) that enables our code to be more modular, flexible and reusable. Classes are the “blueprints” that define the structure(states and behaviours) of our objects and objects are concrete instances of our classes. 
+There are 4 key aspects of OOP that differentiate it from other paradigms. I used the acronym IPEA (like IKEA with a P) to remember the four:</p>
+<ol>
+  <li>Abstraction</li>
+  <li>Encapsulation</li>
+  <li>Inheritance</li>
+  <li>Polymorphism</li>
+</ol>
+
+<p>Abstraction is the act of modelling a real world object or phenomenon to a limited extent that is relevant to our context. Our context determines what to model. For instance, if you were modelling a person in a healthcare database, you would include fields such as height, weight and past medical history. On the other hand, if you were to model someone in an employee database you might opt include fields such as salary, position and peer reviews. </p>
+
+<p>Encapsulation is the ability to expose a limited interface to the rest of a program. In essence, it is hiding parts of its state and behaviours from other objects and clients. As an example, a mobile robot API designer will encapsulate all the code that goes into making a robot move (e.g. starting up obscure hardware modules, sending PWM signals to motors) and only expose a limited interface (e.g. move left, right forward or backward) to its client because moving the robot is the only thing of interest to the client.</p>
+
+<p>Inheritance is the ability for new classes to build on top of existing ones to help us maximize code reuse. You might have an Animalparent class (superclass, with Dog and Cat children classes (subclass). Your subclasses would then inherit the behaviours (e.g. eat() and sleep() ) and attributes (e.g. weight and blood_type )of the Animal class. </p>
+
+<p>Polymorphism is the ability of an object to take on multiple forms. More concretely, it is the ability of a program to call the underlying implementation of a program without knowing its true form. We may have a pointer to an Animal object which could be a Dog or a Cat . Regardless of dog/cat, we can call eat() and the program will help us determine what the object should eat (e.g. dog food vs. cat food) without us having to worry about the underlying animal type.</p>
+
+
 
 </div>
   </main>
