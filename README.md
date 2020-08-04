@@ -9,4 +9,5 @@
 Notes:
 - Documentation = https://youssefraafatnasry.me/portfolYOU/docs/
 - for projects add (1) or (2) in name of md file to increase priority
+- `bundle exec jekyll serve` to run locally
 

@@ -1,16 +1,47 @@
 - title: Student, University of Toronto Robotics Engineering
   from: Aug 2015
   to: Jun 2020    
+  description: • Thesis = Active Learning for Deep Object Detection (with Prof. Steven Waslander) <br />
+               • Relevant Courses = Mathematics for Robotics, Computer Vision for Robotics,
+                 Robot Modelling and Control, Operating Systems, Mechatronics  <br />
+               • Sessional GPA = 3.95, Annual GPA = 3.87, Cumulative GPA = 3.67  <br />
 
 - title: Perception Software Development Intern, Zebra Technologies, Toronto
   from: Aug 2018
   to: Aug 2019
+  description: • Developed novel perception algorithms that expanded system coverage by over 100% and
+                 reduced error rate by 50% using C++, Python, PCL and OpenCV. <br />
+               • Optimized obstacle detection algorithm leading to 30% reduction in computation time
+                 and 30% reduction in error rate using C++ multithreading and PCL. <br />
+               • Authored two perception related patents and co-authored
+                 a SLAM related patent.<br />
 
 - title: Visiting Reseacher, Australian Center for Field Robotics, Sydney
   from: May 2018
   to: Aug 2018
+  description: • Redeveloped, tested and deployed a virtual bumper system for an 
+                 autonomous electric vehicle using C++, ROS, PCL and Gtest. 
+                 The new design reduced the false positive rate of the system by over 
+                 50%. <br /> 
+
+
+- title: Autonomy Software Engineer, AuToronto, Toronto
+  from: Aug 2017
+  to: Aug 2019
+  description: • Benchmarked various pose estimation (visual, visual-inertial & lidar)
+                 algorithms and conducted extrinsic calibrations for the car using ROS,
+                 C++ and MATLAB. <br />
+               • Developed a robust localization system using GNSS, wheel odometry and
+                 lidar using libpointmatcher, PCL and C++.<br />
 
 - title: Visiting Reseacher, Lund University, Lund
   from: May 2017
   to: Aug 2017
+  description: • Developed a fully autonomous wheelchair from scratch in C++ 
+                 using the ROS navigation stack, hector_mapping, Gmapping 
+                 and RTAB-MAP. <br />
+               • Implemented custom PID controller as well as an odometry 
+                 update program in Arduino. <br />
+
+
   
