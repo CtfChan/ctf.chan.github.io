@@ -1,15 +1,15 @@
 ---
 title: OOP Basics
-tags: [OOP]
-style: 
-color: 
+tags: [oop]
+style:
+color:
 description: Basics of object-oriented programming.
 ---
 
 ![](https://unsplash.com/photos/ieic5Tq8YMk)
 
 Object-oriented programming (OOP) is programming paradigm based on based on wrapping data and behaviour into bundles (or objects) that enables our code to be more modular, flexible and reusable. Classes are the "blueprints" that define the structure(states and behaviours) of our objects and objects are concrete instances of our classes. 
-There are 4 key aspects of OOP that differentiate it from other paradigms. I used the acronym IPEA (like IKEA with a P) to remember the four: 
+There are 4 key aspects of OOP that differentiate it from other paradigms. I used the acronym IPEA (like IKEA with a P) to remember the four:
 1. Abstraction
 2. Encapsulation
 3. Inheritance
