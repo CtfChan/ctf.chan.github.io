@@ -1,5 +1,5 @@
 ---
-title: Pimpl Idiom C++
+title: "Cpp Blog: Pimpl Idiom C++"
 tags: [cpp, idiom]
 style:
 color:
