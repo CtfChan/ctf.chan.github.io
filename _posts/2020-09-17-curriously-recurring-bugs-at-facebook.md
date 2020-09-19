@@ -6,7 +6,8 @@ color:
 description: Summary from a CppCon 2017 talk by Louis Brandy
 ---
 
-[![Link to video](http://img.youtube.com/vi/lkgszkPnV8g&ab_channel=CppCon/0.jpg)](http://www.youtube.com/watch?v=lkgszkPnV8g&ab_channel=CppCon)
+[![Curriously Recurring Bugs at Facebook](http://img.youtube.com/vi/lkgszkPnV8g/0.jpg)](http://www.youtube.com/watch?v=lkgszkPnV8g "")
+
 
 This is my summary of a CppCon talk by Louis Brandy on the "Curiously Recurring C++ Bugs at Facebook".
 
