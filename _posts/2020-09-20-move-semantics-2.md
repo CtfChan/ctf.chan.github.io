@@ -6,6 +6,8 @@ color:
 description: We like to move it move it (part 2).
 ---
 
+[![Move Semantics Part 2](http://img.youtube.com/vi/pIzaZbKUw2s/0.jpg)](http://www.youtube.com/watch?v=pIzaZbKUw2s "")
+
 ## Forwarding References
 A forwarding reference is like a shapeshifter. It is an lvalue if initialized by an lvalue and rvalue if initialized by an rvalue. They typically appear in the form of `T&&` or `auto&&` and are used when type deduction is involved.
 ```cpp
