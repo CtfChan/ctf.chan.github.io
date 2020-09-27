@@ -1,5 +1,5 @@
 ---
-title: "Cpp Blog: Move Semantics"
+title: "Cpp Blog: Move Semantics Part 1"
 tags: [cpp]
 style:
 color:
