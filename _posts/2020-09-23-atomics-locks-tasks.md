@@ -112,14 +112,65 @@ public:
 }
 ```
 ## Tasks
+![Visualization of Tasks from Presentation](/assets/tasks.png)
 
+Grimm describes tasks in C++ as a data channel where you have a sender with an `std::promise` and a receiver using `std::future`.
 
 ## Tasks vs Threads
+Here is a small code example comparing threads with tasks in C++.
+
+```cpp
+int result;
+std::thread t([&]{ result = 3 + 4; });
+t.join();
+std::cout << res << std:::endl;
+
+// std::async is a promise
+auto fut = std::async([]{ return 3 + 4; });
+std::cout << fut.get() << std:::endl;
+```
+
+Grimm shared a wonderful table in his presentation outlining the difference between tasks and threads in C++.
+| Characteristic            | Thread                              | Task                                 |
+|---------------------------|-------------------------------------|--------------------------------------|
+| header                    | `<thread>`                            | `<future>`                             |
+| participants              | creator and child thread            | promise and future                   |
+| communication             | shared variable                     | communication channel                |
+| synchronization           | `join` call waits                   | `get` call blocks                    |
+| exception in child thread | child and creator thread terminates | return value of the get call         |
+| kind of communication     | values                              | values, notifications and exceptions |
+
 
 
 ## Parallel STL
+Since C++17 the standard library has offered many parallelized versions of common algorithms such as `sort`, `count`, `transform` etc. The STL offers three execution policies for these algorithms:
+1. `std::execution::seq` = do sequentially in one thread
+2. `std::execution::par` = parallel execution
+3. `std::execution::par_unseq` = parallel and vectorized (uses SIMD for even greater speedup)
+
+Note that (3) might not necessarily offer any speedup depending on your hardware and what version of compiler you're using.
 
 
 ## Condition Variables
+Condition variables (cv) enable you to synchronize threads. You can have a sender thread send notifications using `cv.notify_one()` or `cv.notify_all()`. You can have you receiver thread wait for notifications using
+`cv.wait(lock, ...)`, `cv..wait_for(lock, relTime, ...)` or `cv.wait_until(lock, absTime, ...)`. The `...` is used for a boolean condition to tackle the lost wakeup and spurious wakeup problem. The lost wakeup happens when the sender thread notifies the receiver thread before it begins waiting so the wakeup is lost forever. The spurious wakeup happens when a receiving thread wakes up, only to find that the condition it was waiting for is not satisfied yet.
 
+Here is a simple use case for condition variables
+```cpp
+std::condition_variable cv;
+// sender
+{
+  std::lock_guard<std::mutex> lck(mut); // use lock guard here
+  read = true;
+}
+cv.notify_one();
 
+// receiver
+{
+  std::unique_lock<std::mutex> lck(mut);
+  cv.wait(lck, []{ return ready;}); // ready is a predicate
+  // do the work
+}
+```
+
+Typically promises and futures are preferred over conditional variables. However promises only enable monodirectional thread synchronization where as conditional variables enable bidirectional thread synchronization.
