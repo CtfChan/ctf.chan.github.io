@@ -58,8 +58,7 @@ collections:
 
 
 ### Disqus ###
-disqus: your-short-name-disqus                          # Your website Shortname on disqus
-
+disqus: @disqus_TXnIBkYDNd # Your website Shortname on disqus
 
 ### Analytics ###
 analytics:
@@ -84,7 +83,7 @@ defaults:
       path: ""
       type: "posts"
     values:
-      comments: false                                   # Set to true to enable disqus comments
+      comments: true                                   # Set to true to enable disqus comments
 
 ### Exclude from processing ###
 exclude:
