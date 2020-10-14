@@ -109,7 +109,6 @@ public:
 
     Widget& operator=( Widget&& w) noexcept;
 }
-
 ```
 
 
