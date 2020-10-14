@@ -1,4 +1,3 @@
-
 ---
 title: "Cpp Blog: Exceptions"
 tags: [cpp]
@@ -7,6 +6,7 @@ color:
 description: Exceptional exceptions
 ---
 
+# Cpp Blog: Exceptions
 This post contains my notes from Klaus Iglberger's talk on Exceptions from CppCon 2020.
 
 [Back to Basics: Exceptions - Klaus Iglberger - CppCon 2020 - YouTube](https://www.youtube.com/watch?v=0ojB8c0xUd8&ab_channel=CppCon)
