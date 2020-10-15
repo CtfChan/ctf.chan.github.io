@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Cpp Blog: Header-only vs. Static vs. Dynamic Libraries</b></h1>
+
+<p class="post-metadata text-muted">
+  13 September 2020 -  
+  <b>2 mins read time</b>
+
+  <br></p>
+
+<h1 id="header-only-vs-static-vs-dynamic-libraries">Header-only vs. Static vs. Dynamic Libraries</h1>
+
+<p>Libraries are collections of reusable code for others to use. Static and dynamic libraries will expose header files that define the functionality of the library in addition to pre-compiled binaries that contain the implementation of the library. Header-only libraries define and implement their library’s functionality in its header file(s).</p>
+
+<h2 id="header-only">Header-only</h2>
+
+<p>Many popular C++ libraries are implemented as header-only. For instance, <a href="https://github.com/catchorg/Catch2">Catch2</a> a popular unit testing framework and <a href="https://github.com/nlohmann/json">nlohmann-json</a> a popular json manipulating framework.</p>
+
+<p>Advantages:</p>
+
+<ul>
+  <li>This is the only option when you are writing a library using templates.</li>
+  <li>Clients of the library do not need to compile it beforehand. The header files just need to be added to an existing C++ project.</li>
+</ul>
+
+<p>Disadvantages:</p>
+
+<ul>
+  <li>Compilation times are much greater because the clients of the library will have to compile their code along with your library.</li>
+  <li>Your compilation becomes more entangled. When changes are made to the header-only library, the client will have to recompile all of their code.</li>
+  <li>Since you cannot create pre-compiled binaries as in static and dynamic libraries, you cannot hide any part of your implementation.</li>
+</ul>
+
+<h2 id="static--dynamic">Static &amp; Dynamic</h2>
+
+<p>Static libraries will have a <code class="language-plaintext highlighter-rouge">.lib</code> (Windows) or a <code class="language-plaintext highlighter-rouge">.a</code> signature (Linux). These routines will be compiled and linked directly with the client’s code.</p>
+
+<p>Dynamic libraries will have a <code class="language-plaintext highlighter-rouge">.dll</code> (Windows) or a <code class="language-plaintext highlighter-rouge">.so</code> signature (Linux). These routines will be loaded with the client’s application at runtime.</p>
+
+<p><a href="https://github.com/google/googletest">Googletest</a> is an unit testing library that can be built as a static of dynamic library.</p>
+
+<p>We compare the static vs. dynamic libraries in the table below</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>Static</th>
+      <th>Dynamic</th>
+      <th>Explanation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Avoiding versioning issues</td>
+      <td>v</td>
+      <td> </td>
+      <td>Static libraries are compiled with the project source code so versioning issues will be discovered at compile time.</td>
+    </tr>
+    <tr>
+      <td>Reusability across projects</td>
+      <td> </td>
+      <td>v</td>
+      <td>Static libraries have to be recompiled for every project that that uses them. Dynamic libraries do not.</td>
+    </tr>
+    <tr>
+      <td>Ease of updating</td>
+      <td> </td>
+      <td>v</td>
+      <td>All projects using a static library need to be recompiled ob library update. Dynamic ones only update the library files.</td>
+    </tr>
+    <tr>
+      <td>Speed</td>
+      <td>v</td>
+      <td> </td>
+      <td>Static libraries have a slight speed advantage given that they are compiled with the client code.</td>
+    </tr>
+    <tr>
+      <td>Code size</td>
+      <td> </td>
+      <td>v</td>
+      <td>Static libraries will incease the size of code in the project binaries.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="sources">Sources</h2>
+
+<ul>
+  <li>https://stackoverflow.com/questions/140061/when-to-use-dynamic-vs-static-libraries</li>
+  <li>https://stackoverflow.com/questions/12671383/benefits-of-header-only-libraries#:~:text=5%20Answers&amp;text=There%20are%20situations%20when%20a,the%20library%20might%20be%20used.</li>
+  <li>https://www.learncpp.com/cpp-tutorial/a1-static-and-dynamic-libraries/</li>
+  <li>https://medium.com/swlh/linux-basics-static-libraries-vs-dynamic-libraries-a7bcf8157779</li>
+</ul>
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

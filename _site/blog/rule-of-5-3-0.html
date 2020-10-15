@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Cpp Blog: Rule of 5, 3, 0 in C++</b></h1>
+
+<p class="post-metadata text-muted">
+  12 September 2020 -  
+  <b>2 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#cpp">
+      <span class="tag badge badge-pill text-primary border border-primary">cpp</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#idiom">
+      <span class="tag badge badge-pill text-primary border border-primary">idiom</span>
+    </a>
+    </p>
+
+<h1 id="rule-of-5-3-0">Rule of 5, 3, 0</h1>
+
+<p>In C++ there are six functions that pertain to the lifecycle management of an object: constructor, copy constructor, copy assignment operator, move constructor, move assignment operator and the destructor. For any of the aforementioned functions, the compiler will generate an implementation for you if you do not declare or delete them. The snippet below demonstrates each of these operators.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">MyClass</span> <span class="p">{</span>
+<span class="nl">public:</span>
+  <span class="c1">// constructor</span>
+  <span class="c1">// calls default constructor of each class member and of base class</span>
+  <span class="n">MyClass</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="c1">// copy constructor</span>
+  <span class="c1">// calls copy constructor of each class member and of base class</span>
+  <span class="n">MyClass</span><span class="p">(</span><span class="n">MyClass</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="c1">// copy assignment</span>
+  <span class="c1">// calls copy assignment of each class member and of base class</span>
+  <span class="n">MyClass</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">MyClass</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="c1">// move constructor</span>
+  <span class="c1">// calls move constructor of each class member and base class</span>
+  <span class="n">MyClass</span><span class="p">(</span><span class="n">MyClass</span><span class="o">&amp;&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span>
+
+  <span class="c1">// move assignment</span>
+  <span class="c1">// calls move assignment of each class member and base class</span>
+  <span class="n">MyClass</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">MyClass</span><span class="o">&amp;&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="c1">// destructor</span>
+  <span class="c1">// calls the destructor of each class member and base class</span>
+  <span class="o">~</span><span class="n">MyClass</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// Equivalently</span>
+<span class="k">class</span> <span class="nc">MyClass</span><span class="p">{</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>There are three important rules surrounding when and how we should use these functions:</p>
+
+<ol>
+  <li>Rule of Three</li>
+  <li>Rule of Five</li>
+  <li>Rule of Zero</li>
+</ol>
+
+<h2 id="rule-of-three">Rule of Three</h2>
+
+<ul>
+  <li>The Rule of Three states that: if your class requires a user-defined destructor, copy constructor or a copy assignment operator, then you should define all three functions.</li>
+  <li>The aforementioned functions are user-defined when a class is managing a resource of non-object type (e.g. raw pointer or file descriptor) so the author will have to instruct the compiler on how to allocate/deallocate the resource.</li>
+</ul>
+
+<h2 id="rule-of-five">Rule of Five</h2>
+
+<ul>
+  <li>The Rule of Five states that: if you define a move constructor or move assignment operator, then you should define both functions in addition to the functions involved in the Rule of Three (destructor, copy constructor and copy assignment operator).</li>
+  <li>The Rule of Five is a modern version of the Rule of Three since it was only in C++11 that the move semantics was introduced.</li>
+</ul>
+
+<h2 id="rule-of-zero">Rule of Zero</h2>
+
+<ul>
+  <li>The Rule of Zero states that: if your class does not require a copy/move constructor, a copy/move assignment operator, or a custom destructor then do not define them. This is often the case for classes where all its members have the five aforementioned functions defined.</li>
+  <li>Generally speaking, classes that deal with ownership will have the aforementioned five functions defined. Otherwise, they should not be defined.</li>
+</ul>
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

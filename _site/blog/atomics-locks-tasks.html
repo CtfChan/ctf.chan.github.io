@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Cpp Blog: Atomics, Locks and Tasks</b></h1>
+
+<p class="post-metadata text-muted">
+  23 September 2020 -  
+  <b>8 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#cpp">
+      <span class="tag badge badge-pill text-primary border border-primary">cpp</span>
+    </a>
+    </p>
+
+<h1 id="cpp-blog-atomics-locks-and-tasks">Cpp Blog: Atomics, Locks and Tasks</h1>
+
+<p>These are my notes from CppCon from  Rainer Grimm’s talk titled “Atomics, Locks and Tasks”.</p>
+
+<p>[<img src="http://img.youtube.com/vi/o0i2fc0Keo8/0.jpg" alt="Atomics, Locks, and Tasks" />](http://www.youtube.com/watch?v=o0i2fc0Keo8 “”)</p>
+
+<h2 id="definitions">Definitions</h2>
+<p>A <strong>data race</strong> occurs when two threads access shared state concurrently and at least one thread tries to modify the shared state. This could lead to undefined behaviour.</p>
+
+<p>A <strong>critical section</strong> is a shared state which can only be accessed concurrently by at most one thread.</p>
+
+<p>A <strong>deadlock</strong> is a state in which one thread is blocked forever because it is waiting for the release of a resource it can never acquire.</p>
+
+<h2 id="mutex">Mutex</h2>
+<p><code class="language-plaintext highlighter-rouge">std::mutex</code> is a conccurrency primitive that ensures only one thread can enter a critical section at once. It supports several locking related methods such as <code class="language-plaintext highlighter-rouge">lock()</code>, <code class="language-plaintext highlighter-rouge">unlock()</code> and <code class="language-plaintext highlighter-rouge">try_lock()</code>.</p>
+
+<p>Typically <code class="language-plaintext highlighter-rouge">std::mutex</code> is wrapped with <code class="language-plaintext highlighter-rouge">std::unique_lock</code> or <code class="language-plaintext highlighter-rouge">std::lock_guard</code> which are RAII (resource acquisition is initialization) wrappers. Both wrappers will call <code class="language-plaintext highlighter-rouge">lock()</code> on a given mutex on construction and call <code class="language-plaintext highlighter-rouge">unlock()</code> on the given mutex on destruction. A <code class="language-plaintext highlighter-rouge">unique_lock</code> offers a richer set of functionalities over a <code class="language-plaintext highlighter-rouge">lock_guard</code>. For instance, <code class="language-plaintext highlighter-rouge">unique_lock</code> allows the mutex to be repeatedly locked and unlocked.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;mutex&gt;
+</span>
+<span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">m</span><span class="p">;</span>
+
+<span class="c1">// using lock_guard</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">m1</span><span class="p">);</span>
+    <span class="c1">// critical section</span>
+<span class="p">}</span>
+
+
+
+<span class="c1">// using unique_lock</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">m1</span><span class="p">);</span>
+    <span class="c1">// critical section</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="atomics">Atomics</h2>
+<p>Atomic variables allows threads to concurrently access and update variables without data races. These synchronizations are typicaly achieved with hardware. <code class="language-plaintext highlighter-rouge">std::atomics</code> are typically used for primitive types such as <code class="language-plaintext highlighter-rouge">int</code>, <code class="language-plaintext highlighter-rouge">bool</code>, <code class="language-plaintext highlighter-rouge">float</code>, etc.</p>
+
+<p>Here is an example of multiple threads concurrently updating an atomic variable</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span> <span class="k">constexpr</span> <span class="n">num</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">thead</span><span class="o">&gt;</span> <span class="n">vec</span><span class="p">(</span><span class="n">num</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">i</span><span class="p">;</span>
+
+<span class="c1">// create num threads that each update i 10 times</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">t</span> <span class="o">:</span> <span class="n">vec</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">([</span><span class="o">&amp;</span><span class="n">i</span><span class="p">]{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">n</span><span class="p">)</span> <span class="o">++</span><span class="n">i</span><span class="p">;</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// join our threads</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">t</span> <span class="o">:</span> <span class="n">vec</span><span class="p">)</span>
+    <span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+</code></pre></div></div>
+
+<h2 id="acquiring-multiple-locks-at-the-same-time">Acquiring Multiple Locks at the Same Time</h2>
+<p>Suppose Jim and Kate were sitting at the dinner table and there was only one pair of chopsticks. If each of them have a chopstick, one of them will have to yield their chopsticks otherwise no one gets to eat. It is best if one person acquires both sticks at the same time.</p>
+
+<p>Similarly, threads should acquire mutexes of interest at the same time otherwise we could have a deadlock. <code class="language-plaintext highlighter-rouge">std::lock</code> accepts an arbitruary number of mutexes that it will attempt to lock at the same time.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mutex1</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">defer_lock</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mutex2</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">defer_lock</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">lock</span><span class="p">(</span><span class="n">mutex1</span><span class="p">,</span> <span class="n">mutex2</span><span class="p">);</span> <span class="c1">// can lock arbitrary of unique locks in an atomic fashion</span>
+</code></pre></div></div>
+
+<p>In C++17, we can use <code class="language-plaintext highlighter-rouge">std::scoped_lock</code> which serves the exact function as <code class="language-plaintext highlighter-rouge">std::lock</code> except you do not need to declare the <code class="language-plaintext highlighter-rouge">unique_locks</code> before the function call.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="n">scoped_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">scoped_lock</span><span class="p">(</span><span class="n">mutex1</span><span class="p">,</span> <span class="n">mutex2</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h2 id="scoped-thread-and-jthread">Scoped Thread and <code class="language-plaintext highlighter-rouge">jthread</code></h2>
+<p>When we spawn an <code class="language-plaintext highlighter-rouge">std::thread</code> we must always remember to call <code class="language-plaintext highlighter-rouge">.join()</code> or <code class="language-plaintext highlighter-rouge">.detach()</code> on it. Otherwise, our program will throw an error. Usually we will write RAII wrappers around our threads to automatically do this for us. Here is an example:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">ScopedThread</span> <span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t_</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="k">explicit</span> <span class="n">ScopedThread</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">)</span> <span class="o">:</span> <span class="n">t_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">joinable</span><span class="p">()</span> <span class="o">==</span> <span class="nb">false</span><span class="p">)</span>
+            <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">logic_error</span><span class="p">(</span><span class="s">"No thread"</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="o">~</span><span class="n">ScopedThread</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="c1">// delete copy and copy assignment operator</span>
+    <span class="c1">// we don't wanna end up with multiple instances of</span>
+    <span class="c1">// ScopedThread calling join() on the same thread</span>
+    <span class="n">ScopedThread</span><span class="p">(</span><span class="n">ScopedThread</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+    <span class="n">ScopedThread</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">ScopedThread</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<h2 id="tasks">Tasks</h2>
+<p><img src="/assets/tasks.png" alt="Visualization of Tasks from Presentation" /></p>
+
+<p>Grimm describes tasks in C++ as a data channel where you have a sender with an <code class="language-plaintext highlighter-rouge">std::promise</code> and a receiver using <code class="language-plaintext highlighter-rouge">std::future</code>.</p>
+
+<h2 id="tasks-vs-threads">Tasks vs Threads</h2>
+<p>Here is a small code example comparing threads with tasks in C++.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">result</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]{</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="p">;</span> <span class="p">});</span>
+<span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">:::</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="c1">// std::async is a promise</span>
+<span class="k">auto</span> <span class="n">fut</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">async</span><span class="p">([]{</span> <span class="k">return</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="p">;</span> <span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">fut</span><span class="p">.</span><span class="n">get</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">:::</span><span class="n">endl</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Grimm shared a wonderful table in his presentation outlining the difference between tasks and threads in C++.
+| Characteristic            | Thread                              | Task                                 |
+|—————————|————————————-|————————————–|
+| header                    | <code class="language-plaintext highlighter-rouge">&lt;thread&gt;</code>                            | <code class="language-plaintext highlighter-rouge">&lt;future&gt;</code>                             |
+| participants              | creator and child thread            | promise and future                   |
+| communication             | shared variable                     | communication channel                |
+| synchronization           | <code class="language-plaintext highlighter-rouge">join</code> call waits                   | <code class="language-plaintext highlighter-rouge">get</code> call blocks                    |
+| exception in child thread | child and creator thread terminates | return value of the get call         |
+| kind of communication     | values                              | values, notifications and exceptions |</p>
+
+<h2 id="parallel-stl">Parallel STL</h2>
+<p>Since C++17 the standard library has offered many parallelized versions of common algorithms such as <code class="language-plaintext highlighter-rouge">sort</code>, <code class="language-plaintext highlighter-rouge">count</code>, <code class="language-plaintext highlighter-rouge">transform</code> etc. The STL offers three execution policies for these algorithms:</p>
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">std::execution::seq</code> = do sequentially in one thread</li>
+  <li><code class="language-plaintext highlighter-rouge">std::execution::par</code> = parallel execution</li>
+  <li><code class="language-plaintext highlighter-rouge">std::execution::par_unseq</code> = parallel and vectorized (uses SIMD for even greater speedup)</li>
+</ol>
+
+<p>Note that (3) might not necessarily offer any speedup depending on your hardware and what version of compiler you’re using.</p>
+
+<h2 id="condition-variables">Condition Variables</h2>
+<p>Condition variables (cv) enable you to synchronize threads. You can have a sender thread send notifications using <code class="language-plaintext highlighter-rouge">cv.notify_one()</code> or <code class="language-plaintext highlighter-rouge">cv.notify_all()</code>. You can have you receiver thread wait for notifications using
+<code class="language-plaintext highlighter-rouge">cv.wait(lock, ...)</code>, <code class="language-plaintext highlighter-rouge">cv..wait_for(lock, relTime, ...)</code> or <code class="language-plaintext highlighter-rouge">cv.wait_until(lock, absTime, ...)</code>. The <code class="language-plaintext highlighter-rouge">...</code> is used for a boolean condition to tackle the lost wakeup and spurious wakeup problem. The lost wakeup happens when the sender thread notifies the receiver thread before it begins waiting so the wakeup is lost forever. The spurious wakeup happens when a receiving thread wakes up, only to find that the condition it was waiting for is not satisfied yet.</p>
+
+<p>Here is a simple use case for condition variables</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="n">condition_variable</span> <span class="n">cv</span><span class="p">;</span>
+<span class="c1">// sender</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lck</span><span class="p">(</span><span class="n">mut</span><span class="p">);</span> <span class="c1">// use lock guard here</span>
+  <span class="n">read</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">cv</span><span class="p">.</span><span class="n">notify_one</span><span class="p">();</span>
+
+<span class="c1">// receiver</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lck</span><span class="p">(</span><span class="n">mut</span><span class="p">);</span>
+  <span class="n">cv</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">lck</span><span class="p">,</span> <span class="p">[]{</span> <span class="k">return</span> <span class="n">ready</span><span class="p">;});</span> <span class="c1">// ready is a predicate</span>
+  <span class="c1">// do the work</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Typically promises and futures are preferred over conditional variables. However promises only enable monodirectional thread synchronization where as conditional variables enable bidirectional thread synchronization.</p>
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Cpp Blog:  Curiously Recurring C++ Bugs at Facebook</b></h1>
+
+<p class="post-metadata text-muted">
+  17 September 2020 -  
+  <b>3 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#cpp">
+      <span class="tag badge badge-pill text-primary border border-primary">cpp</span>
+    </a>
+    </p>
+
+<p>[<img src="http://img.youtube.com/vi/lkgszkPnV8g/0.jpg" alt="Curriously Recurring Bugs at Facebook" />](http://www.youtube.com/watch?v=lkgszkPnV8g “”)</p>
+
+<p>This is my summary of a CppCon talk by Louis Brandy on the “Curiously Recurring C++ Bugs at Facebook”.</p>
+
+<h2 id="bug-1-stdvectoroperator-array-ptr">Bug 1: <code class="language-plaintext highlighter-rouge">std::vector::operator[]</code>, <code class="language-plaintext highlighter-rouge">array[]</code>, <code class="language-plaintext highlighter-rouge">*ptr</code></h2>
+<p>It is quite common for us to check the index of an element outside of a vector’s range.</p>
+
+<p>GCC and Clang both have a <code class="language-plaintext highlighter-rouge">-fsanitize=address</code> option helps you check for errors like these. Typically, you can build your unit tests with this option.</p>
+
+<h2 id="bug-2-stdmapoperator">Bug 2: <code class="language-plaintext highlighter-rouge">std::map::operator[]</code></h2>
+<p>In C++ square bracket operator will actually create an element if the element you are trying to find does not exist. If the value in the map is an <code class="language-plaintext highlighter-rouge">int</code>, it will be initialized to 0.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">map</span><span class="o">&lt;</span><span class="n">string</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">mp</span><span class="p">;</span>
+<span class="n">mp</span><span class="p">[</span><span class="s">"hey"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">mp</span><span class="p">[</span><span class="s">"hye"</span><span class="p">];</span> <span class="c1">// THIS PRINTS: 0</span>
+</code></pre></div></div>
+
+<p>Brandy does not have many suggestions for this bug other than maybe using the <code class="language-plaintext highlighter-rouge">at()</code> operator in <code class="language-plaintext highlighter-rouge">std::map</code> which will throw if the key is not in the map.</p>
+
+<h2 id="bug-3-smuggling-a-reference-to-a-temporary-through-a-function">Bug 3: Smuggling a reference to a temporary through a function</h2>
+<p>A common appearance of smuggling references occurs when people create a function that tries to get a value from a map using a given key that returns a default value if not found.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// INCORRECT</span>
+<span class="k">auto</span> <span class="o">&amp;</span><span class="n">v</span> <span class="o">=</span> <span class="n">get_or_return_default</span><span class="p">(</span><span class="n">my_map</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="s">"123"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>This code is incorrect. If <code class="language-plaintext highlighter-rouge">key</code> is not in <code class="language-plaintext highlighter-rouge">my_map</code>, <code class="language-plaintext highlighter-rouge">v</code> is a reference to a temporary that has now been destroyed.</p>
+
+<p>Brandy’s method of dealing with this bug is using the <code class="language-plaintext highlighter-rouge">-fsanitize-address-use-after-scope</code> flag to identify these issues.</p>
+
+<h2 id="bug-4-volatile">Bug 4: Volatile</h2>
+<p>Some programmers mistakenly believe that volatile will make their code threadsafe and thus use misuse the keyword.</p>
+
+<p>To address this, Brandy added a lint rule for all usecases of <code class="language-plaintext highlighter-rouge">volatile</code>.</p>
+
+<h2 id="bug-5-stdshared_ptr">Bug 5: <code class="language-plaintext highlighter-rouge">std::shared_ptr</code></h2>
+<p>Some programmers mistakenly believe that <code class="language-plaintext highlighter-rouge">std::shared_ptr</code> is threadsafe. Only the control block of <code class="language-plaintext highlighter-rouge">std::shared_ptr</code> is threadsafe, not the actual pointer.</p>
+
+<p>Brandy mitigates these issues by using thread sanitizers and using atomic shared pointer implementations.</p>
+
+<p>Another common issue is when programmers try to dereference a shared pointer immediately after it is returned from a function.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span><span class="o">&amp;</span> <span class="n">ref</span> <span class="o">=</span> <span class="o">*</span><span class="n">returns_a_shared_ptr</span><span class="p">();</span>
+<span class="n">ref</span><span class="p">.</span><span class="n">do_something</span><span class="p">();</span> <span class="c1">// whoops, ref might be empty</span>
+</code></pre></div></div>
+<p>After you dereference the shared pointer above, the shared pointer is gone so you will lose the protection count of a shared pointer. Luckily, sanitizers can catch this problem too.</p>
+
+<h2 id="bug-6-not-locking">Bug 6: Not locking</h2>
+<p>Sometimes when programmers declare a <code class="language-plaintext highlighter-rouge">unique_lock</code> they will forget to add a variable name to it. As such, the lock is never initialized and the code is not threadsafe.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">g</span><span class="p">(</span><span class="n">m_mutex</span><span class="p">);</span> <span class="c1">// works fine</span>
+<span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="p">(</span><span class="n">m_mutex</span><span class="p">);</span> <span class="c1">// oops I forgot the g</span>
+</code></pre></div></div>
+
+<p>Brandy’s method of recommended way of mitigating this is using the <code class="language-plaintext highlighter-rouge">-Wshadow</code> to find this. He saids that Facebook has programmed their linters to find this.</p>
+
+<h2 id="conclusions">Conclusions</h2>
+<p>The lesson from this talk is that tools are your best weapon. Enabling certain compiler flags for address and thread santizers can help you prevent many unwanted bugs.</p>
+
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

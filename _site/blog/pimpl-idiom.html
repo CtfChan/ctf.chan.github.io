@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Cpp Blog: Pimpl Idiom C++</b></h1>
+
+<p class="post-metadata text-muted">
+  11 September 2020 -  
+  <b>2 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#cpp">
+      <span class="tag badge badge-pill text-primary border border-primary">cpp</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#idiom">
+      <span class="tag badge badge-pill text-primary border border-primary">idiom</span>
+    </a>
+    </p>
+
+<h1 id="pimpl">PIMPL</h1>
+
+<h2 id="what-is-pimpl">What is PIMPL?</h2>
+
+<p>The PIMPL C++ idiom is typically used to reduced compile-time dependencies and construct C++ library interfaces with a stable ABI (application binary interface). This technique involves moving the implementation details of a class from it’s object representation into a separate class accessed through an opaque pointer.</p>
+
+<p>Below is a sample implementation of the PIMPL idiom in C++.</p>
+
+<p><strong>Header File</strong></p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">VisibleClass</span> <span class="p">{</span>
+  <span class="n">VisibleClass</span><span class="p">();</span>
+  <span class="o">~</span><span class="n">VisibleClass</span><span class="p">();</span>
+  <span class="c1">// ...</span>
+<span class="nl">private:</span>
+  <span class="k">class</span> <span class="nc">HiddenImpl</span><span class="p">;</span> <span class="c1">// things to hide</span>
+  <span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">HiddenImpl</span><span class="o">&gt;</span> <span class="n">pimpl_</span><span class="p">;</span> <span class="c1">// opaque ptr</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p><strong>Implementation File</strong></p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">VisibleClass</span><span class="o">::</span><span class="n">HiddenImpl</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">};</span>
+
+<span class="n">VisibleClass</span><span class="o">::</span><span class="n">VisibleClass</span><span class="p">()</span> <span class="o">:</span> <span class="n">pimpl_</span><span class="p">(</span><span class="k">new</span> <span class="n">HiddenImpl</span><span class="p">)</span> <span class="p">{}</span>
+<span class="n">VisibleClass</span><span class="o">::~</span><span class="n">VisibleClass</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>In C++, deleting a pointer in which its type is not defined (only forward declared) will lead to undefined behaviour. To prevent this, <code class="language-plaintext highlighter-rouge">unique_ptr</code> will check if the definition of the type its pointer to is visible before calling delete in its destructor. If we were to not declare the destructor of <code class="language-plaintext highlighter-rouge">VisibleClass</code>, the compiler would generate an inlined version of it for us in the header file. Since the type of <code class="language-plaintext highlighter-rouge">HiddenImpl</code> is incomplete in the header file, your code will not compile. The solution is to define your own destructor so that by the time <code class="language-plaintext highlighter-rouge">unique_ptr</code> tries to deallocate the resources for <code class="language-plaintext highlighter-rouge">HiddenImpl</code> in Line 6 of the implementation file, <code class="language-plaintext highlighter-rouge">class VisibleClass::HiddenImpl;</code> will be fully defined.</p>
+
+<p>It is recommended that you place all private nonvirtual members into the <code class="language-plaintext highlighter-rouge">HiddenImpl</code> class. In doing so, you eliminate the need to pass a back pointer to access members in the <code class="language-plaintext highlighter-rouge">VisibleClass</code> from <code class="language-plaintext highlighter-rouge">HiddenImpl</code>. Unfortunately you cannot hide virtual members in the member functions of <code class="language-plaintext highlighter-rouge">HiddenImpl</code>.</p>
+
+<h2 id="when-to-use">When to use?</h2>
+
+<p>There are several reasons why you might want to use PIMPL in your code:</p>
+
+<ol>
+  <li>Decrease Compilation times
+Whenever the header file of class <code class="language-plaintext highlighter-rouge">X</code> changes, every client that uses <code class="language-plaintext highlighter-rouge">X</code> has to be recompiled. With PIMPL, only the implementation of <code class="language-plaintext highlighter-rouge">X</code> has to be recompiled when you makes changes to the underlying fields/methods.</li>
+  <li>Binary Compatibility
+Adding new fields/methods to <code class="language-plaintext highlighter-rouge">HiddenImpl</code> will not affect the binary interface your end user sees. So changes are less high risk.</li>
+  <li>Hiding Implementations/Data
+Because your source files will be compiled into binaries/libraries, when you share your headers and librar (.so or .a file) you will have hidden part of your implementation from the end user.</li>
+</ol>
+
+<h2 id="sources">Sources:</h2>
+
+<ul>
+  <li><a href="https://en.cppreference.com/w/cpp/language/pimpl">PImpl - cppreference.com</a></li>
+  <li><a href="https://www.geeksforgeeks.org/pimpl-idiom-in-c-with-examples/">PImpl Idiom in C++ with Examples - GeeksforGeeks</a></li>
+  <li><a href="https://stackoverflow.com/questions/8972588/is-the-pimpl-idiom-really-used-in-practice">c++ - Is the pImpl idiom really used in practice? - Stack Overflow</a></li>
+  <li><a href="https://www.fluentcpp.com/2017/09/22/make-pimpl-using-unique_ptr/">How to implement the pimpl idiom by using unique_ptr - Fluent C++</a></li>
+  <li><a href="https://herbsutter.com/gotw/_100/">GotW #100: Compilation Firewalls (Difficulty: 6/10) – Sutter’s Mill</a></li>
+</ul>
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

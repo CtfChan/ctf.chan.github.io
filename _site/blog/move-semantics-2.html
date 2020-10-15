@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Cpp Blog: Move Semantics Part 2</b></h1>
+
+<p class="post-metadata text-muted">
+  20 September 2020 -  
+  <b>4 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#cpp">
+      <span class="tag badge badge-pill text-primary border border-primary">cpp</span>
+    </a>
+    </p>
+
+<p>[<img src="http://img.youtube.com/vi/pIzaZbKUw2s/0.jpg" alt="Move Semantics Part 2" />](http://www.youtube.com/watch?v=pIzaZbKUw2s “”)</p>
+
+<h2 id="forwarding-references">Forwarding References</h2>
+<p>A forwarding reference is like a shapeshifter. It is an lvalue if initialized by an lvalue and rvalue if initialized by an rvalue. They typically appear in the form of <code class="language-plaintext highlighter-rouge">T&amp;&amp;</code> or <code class="language-plaintext highlighter-rouge">auto&amp;&amp;</code> and are used when type deduction is involved.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">f</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">x</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">var2</span> <span class="o">=</span> <span class="n">var1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h2 id="reference-collapsing">Reference Collapsing</h2>
+<p>The rules below are used by the compiler to collapse lvalue and rvalue references adjacent to one another.
+<code class="language-plaintext highlighter-rouge">&amp; &amp;</code> -&gt; <code class="language-plaintext highlighter-rouge">&amp;</code>
+<code class="language-plaintext highlighter-rouge">&amp;&amp; &amp;</code> -&gt; <code class="language-plaintext highlighter-rouge">&amp;</code>
+<code class="language-plaintext highlighter-rouge">&amp; &amp;&amp;</code> -&gt; <code class="language-plaintext highlighter-rouge">&amp;</code>
+<code class="language-plaintext highlighter-rouge">&amp;&amp; &amp;&amp;</code> -&gt; <code class="language-plaintext highlighter-rouge">&amp;&amp;</code></p>
+
+<h2 id="perfect-forwarding">Perfect forwarding</h2>
+<p><code class="language-plaintext highlighter-rouge">std::forward</code> will considtionally cast its input into an rvalue reference. Given an lvalue, it will cast the input to lvalue. Given an rvalue, it will cast the input to an rvalue</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">forward</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">remove_reference_t</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&amp;&amp;&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Suppose I pass an lvalue, so we replace <code class="language-plaintext highlighter-rouge">T</code> with <code class="language-plaintext highlighter-rouge">SomeClass&amp;</code>. By reference collapsing <code class="language-plaintext highlighter-rouge">SomeClass&amp; &amp;&amp;</code> become <code class="language-plaintext highlighter-rouge">SomeClass&amp;</code>. Remove reference will strip lvalue or value references from the <code class="language-plaintext highlighter-rouge">SomeClass</code> type so <code class="language-plaintext highlighter-rouge">std::remove_reference_t&lt;SomeClass&amp;&gt;&amp; t</code> evaluates to <code class="language-plaintext highlighter-rouge">SomeClass&amp; t</code>. The resulting forward function instantiated is.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span> <span class="p">&gt;</span>
+<span class="n">SomeClass</span><span class="o">&amp;</span> <span class="n">forward</span><span class="p">(</span><span class="n">SomeClass</span><span class="o">&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">SomeClass</span><span class="o">&amp;&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Suppose I pass an rvalue, so we replace <code class="language-plaintext highlighter-rouge">T</code> with <code class="language-plaintext highlighter-rouge">SomeClass&amp;&amp;</code>. Similar to the logic above, <code class="language-plaintext highlighter-rouge">SomeClass&amp;&amp; &amp;&amp;</code> become <code class="language-plaintext highlighter-rouge">SomeClass&amp;&amp;</code> and <code class="language-plaintext highlighter-rouge">std::remove_reference_t&lt;SomeClass&amp;&amp;&gt;&amp; t</code> evaluates to <code class="language-plaintext highlighter-rouge">SomeClass&amp; t</code>.The resulting forward function instantiated is.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span> <span class="p">&gt;</span>
+<span class="n">SomeClass</span><span class="o">&amp;&amp;</span> <span class="n">forward</span><span class="p">(</span><span class="n">SomeClass</span><span class="o">&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">SomeClass</span><span class="o">&amp;&amp;&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="perfect-forwarding-1">Perfect Forwarding</h2>
+<p>With the help of perfect forwarding we can forward the type of an argument into a function into another function being called. To illustrate the power of perfect forwarding we use the example of the <code class="language-plaintext highlighter-rouge">make_unique</code> function. A naive approach might be similar to the ones below.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// the argument `arg` is always copied into function and passed as lvalue to T</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Arg</span><span class="p">&gt;</span>
+<span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">make_unique</span><span class="p">(</span><span class="n">Arg</span> <span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">T</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// `arg` is passed as lvalue to T, but what if I want an rvalue to be passed to T :(</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Arg</span><span class="p">&gt;</span>
+<span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">make_unique</span><span class="p">(</span><span class="n">Arg</span><span class="o">&amp;&amp;</span> <span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">T</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>With <code class="language-plaintext highlighter-rouge">std::forward</code> we can forward the type of <code class="language-plaintext highlighter-rouge">args</code> into <code class="language-plaintext highlighter-rouge">T</code>’s constructor. So <code class="language-plaintext highlighter-rouge">T</code> can now be initialized using an rvalue or lvalue without the need for expensive copies.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span><span class="o">...</span> <span class="nc">Args</span><span class="p">&gt;</span>
+<span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">make_unique</span><span class="p">(</span><span class="n">Args</span><span class="o">&amp;&amp;</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">T</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...</span> <span class="p">)</span> <span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="move">Move</h2>
+<p>The machanics of <code class="language-plaintext highlighter-rouge">std::move</code> is very similar to <code class="language-plaintext highlighter-rouge">std::foward</code> in that it uses <code class="language-plaintext highlighter-rouge">std::remove_reference_t</code> to gernerate the correct reference type.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">remove_reference_t</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;&amp;</span> <span class="n">move</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
+   <span class="k">return</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">remove_reference_t</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;&amp;&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

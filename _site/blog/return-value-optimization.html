@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Cpp Blog: Return Value Optimization & Named Return Value Optimization</b></h1>
+
+<p class="post-metadata text-muted">
+  18 September 2020 -  
+  <b>3 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#cpp">
+      <span class="tag badge badge-pill text-primary border border-primary">cpp</span>
+    </a>
+    </p>
+
+<h1 id="return-value-optimization-nrvo--named-return-value-optimization-nrvo">Return Value Optimization (NRVO) &amp; Named Return Value Optimization (NRVO)</h1>
+<p>Cope samples borrowed from Shahar Mike’s Web Spot.</p>
+
+<h2 id="what-is-this">What is this?</h2>
+<p>NVO and NRVO are two types of return value optmization that the C++ compiler performs for us.</p>
+
+<p>Consider a call:</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">T</span> <span class="n">some_variable</span> <span class="o">=</span> <span class="n">functionName</span><span class="p">();</span>
+</code></pre></div></div>
+<p>The idea is for the compiler to use the memory space for <code class="language-plaintext highlighter-rouge">some_variable</code> outside of <code class="language-plaintext highlighter-rouge">functionName()</code>’s scope to directly initialize the object return from the function.</p>
+
+<p>Without RVO or NRVO, the compiler would be creating duplicate copies of the same object. To illustrate this point, consider this definition of <code class="language-plaintext highlighter-rouge">SomeClass</code> which just couts the type of constructor/operator/destructor being called on it.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">SomeClass</span>
+<span class="p">{</span>
+<span class="nl">public:</span>
+    <span class="n">SomeClass</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Constructor called"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="o">~</span><span class="n">SomeClass</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Destructor called"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">SomeClass</span><span class="p">(</span><span class="k">const</span> <span class="n">SomeClass</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Copy constructor called"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">SomeClass</span><span class="p">(</span><span class="n">SomeClass</span> <span class="o">&amp;&amp;</span><span class="n">s</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Move constructor called"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">SomeClass</span> <span class="o">&amp;</span><span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">SomeClass</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Copy assignment called"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">SomeClass</span> <span class="o">&amp;</span><span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">SomeClass</span> <span class="o">&amp;&amp;</span><span class="n">s</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Move assignment called"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Suppose we have some factory function for <code class="language-plaintext highlighter-rouge">SomeClass</code> that our code calls on:</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">SomeClass</span> <span class="nf">createSomeClassObject</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">SomeClass</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">obj</span> <span class="o">=</span> <span class="n">createSomeClassObject</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>We will run the aforementioned code twice. Once with the <code class="language-plaintext highlighter-rouge">-fno-elide-constructors</code> argument which disables RVO and once with RVO enabled.</p>
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span><span class="w"> </span>clang++ <span class="nt">-std</span><span class="o">=</span>c++11 <span class="nt">-fno-elide-constructors</span> main.cpp <span class="o">&amp;&amp;</span> ./a.out
+<span class="go">Constructor called
+Move construct called
+Destructor called
+Move constructor called
+Destructor called
+Destructor called
+
+</span><span class="gp">$</span><span class="w"> </span>clang++ <span class="nt">-std</span><span class="o">=</span>c++11 main.cpp <span class="o">&amp;&amp;</span> ./a.out
+<span class="go">Constructor called
+Destructor called
+</span></code></pre></div></div>
+
+<p>With RVO we can see that <code class="language-plaintext highlighter-rouge">SomeClass</code> is only constructed once. On the other hand, the compiler creates 3 instances of <code class="language-plaintext highlighter-rouge">SomeClass</code>. The first instance is created when we call <code class="language-plaintext highlighter-rouge">return SomeClass</code> in <code class="language-plaintext highlighter-rouge">createSomeClassObject()</code>. The second instance is created for the returned object inside <code class="language-plaintext highlighter-rouge">main()</code>. The third instance is created for the named object <code class="language-plaintext highlighter-rouge">obj</code>.</p>
+
+<p>NRVO operates very similar to RVO, except the return object is named within the function.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// RVO</span>
+<span class="n">SomeClass</span> <span class="nf">createSomeClassObject</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">SomeClass</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">// NRVO</span>
+<span class="n">SomeClass</span> <span class="nf">createSomeClassObject</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">some_class</span> <span class="o">=</span> <span class="n">SomeClass</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">some_class</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="when-rvo-doesnt-happen">When RVO doesn’t happen?</h2>
+<ul>
+  <li>Function returns an instance that is determined at runtime.</li>
+  <li>Function returns a parameter to the function or a global variable.</li>
+  <li>Function returns by <code class="language-plaintext highlighter-rouge">std::move()</code></li>
+  <li>Using <code class="language-plaintext highlighter-rouge">operator=</code> on an existing object.</li>
+  <li>Return member variables.</li>
+</ul>
+
+<h2 id="sources">Sources</h2>
+<ul>
+  <li><a href="https://shaharmike.com/cpp/rvo/">Return Value Optimization | Shahar Mike’s Web Spot</a></li>
+  <li><a href="https://www.fluentcpp.com/2016/11/28/return-value-optimizations/">Return value optimizations - Fluent C++</a></li>
+</ul>
+
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

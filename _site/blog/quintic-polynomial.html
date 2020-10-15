@@ -58,42 +58,86 @@
 
 </nav>
   <div class="col-lg-10 mx-auto mt-5 post">
-  <h1><b>Software Blog: OOP Basics</b></h1>
+  <h1><b>Robotics Blog: Quintic Polynomial</b></h1>
 
 <p class="post-metadata text-muted">
-  05 May 2020 -  
-  <b>2 mins read time</b>
+  14 March 2020 -  
+  <b>3 mins read time</b>
 
   <br>Tags: 
     
-    <a class="text-decoration-none no-underline" href="/blog/tags#oop">
-      <span class="tag badge badge-pill text-primary border border-primary">oop</span>
+    <a class="text-decoration-none no-underline" href="/blog/tags#robotics">
+      <span class="tag badge badge-pill text-primary border border-primary">robotics</span>
     </a>
     </p>
 
-<p>Object-oriented programming (OOP) is programming paradigm based on based on wrapping data and behaviour into bundles (or objects) that enables our code to be more modular, flexible and reusable. Classes are the “blueprints” that define the structure(states and behaviours) of our objects and objects are concrete instances of our classes. 
-There are 4 key aspects of OOP that differentiate it from other paradigms. I used the acronym IPEA (like IKEA with a P) to remember the four:</p>
+<h2 id="introduction">Introduction</h2>
+<p>Quintic splines are a common path parametrization in robotics. A quintic polynomial is a 5th order polynomial. Each dimension $(x, y)$ is represented as a quintic polynomial. The coefficients $a_i$ and $b_i$ can be solved for provided we give the robot’s start position, velocity and acceleration ($x_s$, $v_s$, $a_s$) as well as the end position, velocity and acceleration ($x_f$, $v_f$, $a_f$); these are also known the boundary conditions.</p>
 
-<ol>
-  <li>Abstraction</li>
-  <li>Encapsulation</li>
-  <li>Inheritance</li>
-  <li>Polymorphism</li>
-</ol>
+<script type="math/tex; mode=display">x(t) = a_o + a_1 t + a_2 t ^2 + a_3 t ^ 3 + a_4 t ^ 4 + a_5 t^5</script>
 
-<p>Abstraction is the act of modelling a real world object or phenomenon to a limited extent that is relevant to our context. Our context determines what to model. For instance, if you were modelling a person in a healthcare database, you would include fields such as height, weight and past medical history. On the other hand, if you were to model someone in an employee database you might opt include fields such as salary, position and peer reviews.</p>
+<script type="math/tex; mode=display">y(t) = b_o + b_1 t + b_2 t ^2 + b_3 t ^ 3 + b_4 t ^ 4 + b_5 t^5</script>
 
-<p>Encapsulation is the ability to expose a limited interface to the rest of a program. In essence, it is hiding parts of its state and behaviours from other objects and clients. As an example, a mobile robot API designer will encapsulate all the code that goes into making a robot move (e.g. starting up obscure hardware modules, sending PWM signals to motors) and only expose a limited interface (e.g. move left, right forward or backward) to its client because moving the robot is the only thing of interest to the client.</p>
+<h2 id="issues">Issues</h2>
+<p>There are discontinuities in the curvature paramatrization of quintic splines, which makes the curvature hard to constrain. From the equation of curvature $k(t)$ below, we can see that the denominator of the equation could be undefined.</p>
 
-<p>Inheritance is the ability for new classes to build on top of existing ones to help us maximize code reuse. You might have an Animal parent class (superclass, with Dog and Cat children classes (subclass). Your subclasses would then inherit the behaviours (e.g. eat() and sleep() ) and attributes (e.g. weight and blood_type )of the Animal class.</p>
+<script type="math/tex; mode=display">k(t) = \frac{x'(t) y''(t) - y'(t)x''(t)}{ (x'(t)^2 + y'(t)^2)^{3/2}  }</script>
 
-<p>Polymorphism is the ability of an object to take on multiple forms. More concretely, it is the ability of a program to call the underlying implementation of a program without knowing its true form. We may have a pointer to an Animal object which could be a Dog or a Cat . Regardless of dog/cat, we can call eat() and the program will help us determine what the object should eat (e.g. dog food vs. cat food) without us having to worry about the underlying animal type.</p>
+<h2 id="solving-the-equation">Solving the Equation</h2>
+<p>Let us consider only <code class="language-plaintext highlighter-rouge">x(t)</code>. We can solve for $a_i$ provided that we are given the start position, velocity and acceleration ($x_s$, $v_s$, $a_s$) as well as the end position, velocity and acceleration ($x_f$, $v_f$, $a_f$); these are also known the boundary conditions of $x(t)$’s zeroth, first and second derivative.</p>
 
-<h2 id="summary">Summary:</h2>
-<p>Abstraction = model real world object/phenomenon to a limited extent
-Encapsulation = exposing a limited interface to the rest of the program
-Inheritance = ability for new classes to build on existing ones
-Polymorphoism = ability for a base object to take on different forms</p>
+<p>First derivative:
+$x’(t) = a_1 + 2 a_2 t  + 3 a_3 t ^ 2 + 4 a_4 t ^ 3 + 5 a_5 t^ 4   $</p>
+
+<p>Second derivative:
+$x’‘(t) = 2 a_2 t  +  6 a_3 t + 12 a_4 t ^ 2 + 20 a_5 t^ 3    $</p>
+
+<p>Using our initial boundary conditions for $t = 0$ we can easily solve for $a_0$, $a_1$, $a_2$.</p>
+
+<p>$x(0) = x_s = a_0 $</p>
+
+<p>$x’(0) = v_s = a_1 $</p>
+
+<p>$x’‘(0) = a_s = 2 a_2 $</p>
+
+<p>Now lets solve for $a_3$, $a_4$, $a_5$ using our boundary conditions of $t = T$.</p>
+
+<p>Eqn 1:  $x(T) = x_e = a_o + a_1 T + a_2 T ^2 + a_3 T ^ 3 + a_4 T ^ 4 + a_5 T^5   $</p>
+
+<p>Eqn 2: $x’(T) = v_e = a_1 + 2 a_2 T  + 3 a_3 T ^ 2 + 4 a_4 T ^ 3 + 5 a_5 T^ 4   $</p>
+
+<p>Eqn 3: $x’‘(T) = a_e = 2 a_2 T  +  6 a_3 T + 12 a_4 T ^ 2 + 20 a_5 T^ 3    $</p>
+
+<p>Since we have already solved for $a_0$, $a_1$, $a_2$, we can rearrange (1), (2) and (3) to have all of our unknwons on the left and known variables on the right side of the equality.</p>
+
+<p>Eqn 1:  $ a_3 T ^ 3 + a_4 T ^ 4 + a_5 T^5  = x_e - a_0 - a_1 T - a_2 T ^2  $</p>
+
+<p>Eqn 2:  $ 3 a_3 T ^ 2 + 4 a_4 T ^ 3 + 5 a_5 T^4  = v_e - a_1 - a_1 T - 2 a_2 T $</p>
+
+<p>Eqn 3:  $ 6 a_3 T + 12 a_4 T ^ 2 + 20 a_t T^3 = a_e - 2 a_2 $</p>
+
+<p>The three equations above can now be conveniently factored into a system of linear equations $Ax=b$.</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{pmatrix}
+T^3 & T^4 & T^5 \\
+3T^2 & 4 T ^3 & 5 T ^ 4 \\
+6T & 12 T ^2 & 20 T^3
+\end{pmatrix}
+\begin{pmatrix}
+a_3 \\
+a_4 \\
+a_5
+\end{pmatrix}
+=\space
+\begin{pmatrix}
+x_e - a_0 - a_1 T - a_2 T ^2 \\
+v_e - a_1 - a_1 T - 2 a_2 T \\
+a_e - 2 a_2
+\end{pmatrix} %]]></script>
+
+<p>Since $T \geq 0$ our A matrix will be invertible and we can solve for $a_3$, $a_4$, $a_5$ using $x = A^{-1} b$.</p>
+
 
 
 

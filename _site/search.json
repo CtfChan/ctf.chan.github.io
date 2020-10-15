@@ -1,27 +1,123 @@
 [
   
     {
-      "title"    : "OOP Basics",
+      "title"    : "Cpp Blog: Exceptions",
       "category" : "",
-      "tags"     : "OOP",
-      "url"      : "/blog/oop-basics",
-      "date"     : "2020-05-05 00:00:00 -0400"
+      "tags"     : "cpp",
+      "url"      : "/blog/exceptions",
+      "date"     : "2020-09-24 00:00:00 -0400"
     } ,
   
     {
-      "title"    : "UML Basics Reference",
+      "title"    : "Cpp Blog: Atomics, Locks and Tasks",
       "category" : "",
-      "tags"     : "uml, oop",
-      "url"      : "https://medium.com/@christophertzechan/uml-basics-reference-efe7848c7f68?sk=c33230cb87678cbbe969054a961e1d76",
-      "date"     : "2016-02-09 00:00:00 -0500"
+      "tags"     : "cpp",
+      "url"      : "/blog/atomics-locks-tasks",
+      "date"     : "2020-09-23 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Cpp Blog: Move Semantics Part 2",
+      "category" : "",
+      "tags"     : "cpp",
+      "url"      : "/blog/move-semantics-2",
+      "date"     : "2020-09-20 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Cpp Blog: Move Semantics Part 1",
+      "category" : "",
+      "tags"     : "cpp",
+      "url"      : "/blog/move-semantics",
+      "date"     : "2020-09-19 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Cpp Blog: Return Value Optimization &amp; Named Return Value Optimization",
+      "category" : "",
+      "tags"     : "cpp",
+      "url"      : "/blog/return-value-optimization",
+      "date"     : "2020-09-18 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Cpp Blog:  Curiously Recurring C++ Bugs at Facebook",
+      "category" : "",
+      "tags"     : "cpp",
+      "url"      : "/blog/curriously-recurring-bugs-at-facebook",
+      "date"     : "2020-09-17 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Cpp Blog: Header-only vs. Static vs. Dynamic Libraries",
+      "category" : "",
+      "tags"     : "",
+      "url"      : "/blog/header-static-dynamic-libraries",
+      "date"     : "2020-09-13 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Cpp Blog: Rule of 5, 3, 0 in C++",
+      "category" : "",
+      "tags"     : "cpp, idiom",
+      "url"      : "/blog/rule-of-5-3-0",
+      "date"     : "2020-09-12 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Cpp Blog: Pimpl Idiom C++",
+      "category" : "",
+      "tags"     : "cpp, idiom",
+      "url"      : "/blog/pimpl-idiom",
+      "date"     : "2020-09-11 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Cpp Blog: Cpp Casts",
+      "category" : "",
+      "tags"     : "cpp",
+      "url"      : "https://medium.com/@christophertzechan/cpp-blog-cpp-casts-static-dynamic-const-reinterpret-45e842bf222a?source=friends_link&sk=3ec4a0c47cfb0816843dde4ba71d6118",
+      "date"     : "2020-09-05 00:00:00 -0400"
     } ,
   
     {
       "title"    : "Cpp Blog: Smart Pointers in C++",
       "category" : "",
-      "tags"     : "Cpp, Smart Pointers",
+      "tags"     : "cpp, smart pointers",
       "url"      : "https://medium.com/@christophertzechan/smart-pointers-in-c-b5e3d041ed0a?source=friends_link&sk=c24c4e4bdc3596a0d796a3bc52518c93",
-      "date"     : "2015-09-25 00:00:00 -0400"
+      "date"     : "2020-06-12 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Software Blog: OOP Basics",
+      "category" : "",
+      "tags"     : "oop",
+      "url"      : "/blog/oop-basics",
+      "date"     : "2020-05-05 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Software Blog: UML Basics Reference",
+      "category" : "",
+      "tags"     : "uml, oop",
+      "url"      : "https://medium.com/@christophertzechan/uml-basics-reference-efe7848c7f68?sk=c33230cb87678cbbe969054a961e1d76",
+      "date"     : "2020-04-04 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "X Sum",
+      "category" : "",
+      "tags"     : "",
+      "url"      : "/blog/X-sum",
+      "date"     : "2020-04-01 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Robotics Blog: Quintic Polynomial",
+      "category" : "",
+      "tags"     : "robotics",
+      "url"      : "/blog/quintic-polynomial",
+      "date"     : "2020-03-14 00:00:00 -0400"
     } 
   
 ]

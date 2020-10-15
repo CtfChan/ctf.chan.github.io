@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Cpp Blog: Exceptions</b></h1>
+
+<p class="post-metadata text-muted">
+  24 September 2020 -  
+  <b>4 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#cpp">
+      <span class="tag badge badge-pill text-primary border border-primary">cpp</span>
+    </a>
+    </p>
+
+<h1 id="cpp-blog-exceptions">Cpp Blog: Exceptions</h1>
+<p>This post contains my notes from Klaus Iglberger’s talk on Exceptions from CppCon 2020.</p>
+
+<p><a href="https://www.youtube.com/watch?v=0ojB8c0xUd8&amp;ab_channel=CppCon">Back to Basics: Exceptions - Klaus Iglberger - CppCon 2020 - YouTube</a></p>
+
+<h2 id="intro-to-exceptions">Intro to Exceptions</h2>
+<p>Exceptions is a widely debated topic in the C++ community. Some companies use it and some companies completely ban the use of exceptions in their code bases. There are four main reasons why people are sometimes against using exceptions:</p>
+<ol>
+  <li>When an error occurs during an exception, it will incur a significant penalty.</li>
+  <li>Exceptions make it hard to reason about functions since we typically expect functions to have one set of output(s).</li>
+  <li>Exceptions rely of dynamic memory. On some embedded platforms this might not be available or desirable.</li>
+  <li>Exceptions increase the size of your binary file.</li>
+</ol>
+
+<h2 id="mechanics-of-an-exception">Mechanics of an Exception</h2>
+<p>An exception is usually characterized by three keywords <code class="language-plaintext highlighter-rouge">throw</code>, <code class="language-plaintext highlighter-rouge">try</code> and <code class="language-plaintext highlighter-rouge">catch</code>. Below is a snippet of code that demonstrates the use of exceptions in C++ code. Your <code class="language-plaintext highlighter-rouge">main()</code> will try to call <code class="language-plaintext highlighter-rouge">someFunction()</code>, if the error conditions occurs then <code class="language-plaintext highlighter-rouge">someFunction()</code> will throw an exception which we will catch.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">someFunction</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span> <span class="o">=</span> <span class="s">"blah blah"</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span> <span class="cm">/* some error condition */</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="s">"you messed up..."</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">try</span> <span class="p">{</span>
+        <span class="c1">// ...</span>
+        <span class="n">someFunction</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">catch</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">ex</span> <span class="p">)</span>  <span class="p">{</span>
+        <span class="cm">/* handle the exception */</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>In the case of an exception, a stack unwinding will occur in which objects on the stack will be destroyed in reverse order. So in this case, when <code class="language-plaintext highlighter-rouge">std::runtime_error</code> is thrown, we will destroy <code class="language-plaintext highlighter-rouge">s</code> then any stack initializations that happen before <code class="language-plaintext highlighter-rouge">someFunction()</code> in the <code class="language-plaintext highlighter-rouge">try</code> block.</p>
+
+<p>If an exception is not caught, no stack unwinding will occur and <code class="language-plaintext highlighter-rouge">std::terminate</code> will be called. This could potentially lead to leaked resources.</p>
+
+<h1 id="when-to-use-exceptions">When to use exceptions</h1>
+<p>There are three scenarios in which you would want to use an exception:</p>
+<ol>
+  <li>For errors that occur very rarely.</li>
+  <li>For errors that cannot be dealt with locally. For instance, if a file is not found in a function or a key is not in the map.</li>
+  <li>For operators and constructors. These functions do not have any other mechanisms for error feedback.</li>
+</ol>
+
+<h1 id="when-not-to-use-exceptions">When not to use exceptions</h1>
+<ol>
+  <li>For errors that are expected to fail frequently.</li>
+  <li>For functions that are expected to fail sometimes (e.g converting string to int). Use <code class="language-plaintext highlighter-rouge">std::optional</code> or <code class="language-plaintext highlighter-rouge">boost::expected</code> in these cases.</li>
+  <li>If you require guaranteed response times.</li>
+  <li>Things that should never happen (e.g. dereference nullptrs or out-of-range access). Use <code class="language-plaintext highlighter-rouge">assert</code> in these scenarios.</li>
+</ol>
+
+<h1 id="tips-on-using-exceptions">Tips on using exceptions</h1>
+<p>It is best practice to build on the standard <code class="language-plaintext highlighter-rouge">std::execption</code> when using exceptions. You should try to throw by rvalue to efficiency reasons. Also, it is best to catch by const references to avoid unnecessary copies.</p>
+
+<h1 id="exception-safety-guarantees">Exception Safety Guarantees</h1>
+<p>Iglberger identifies 4 levels of exception safety guarantees.</p>
+<ol>
+  <li>exception unsafe
+    <ul>
+      <li>Mo guarantees with respect to invariants and resources</li>
+    </ul>
+  </li>
+  <li>basic exception safety gurantees
+    <ul>
+      <li>invariants are preserved</li>
+      <li>no resources are leaked</li>
+    </ul>
+  </li>
+  <li>strong exception guarantees
+    <ul>
+      <li>invariants are preserved</li>
+      <li>no resources are leaked</li>
+      <li>no state change</li>
+      <li>not always possible</li>
+    </ul>
+  </li>
+  <li>no-throw guarantee
+    <ul>
+      <li>the operation cannot fail</li>
+      <li>expressed in code with noexcept</li>
+    </ul>
+  </li>
+</ol>
+
+<p>Striving for a no-throw guarantee is always the best option. Below is an example of a class that follows this guarantee.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Widget</span> <span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Resource</span><span class="o">&gt;</span> <span class="n">ptr</span><span class="p">;</span>
+
+<span class="nl">public:</span>
+    <span class="c1">// copy constructor</span>
+    <span class="n">Widget</span><span class="p">(</span> <span class="n">Widget</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">w</span><span class="p">)</span> <span class="o">:</span>
+        <span class="n">i</span> <span class="p">{</span> <span class="n">w</span><span class="p">.</span><span class="n">i</span> <span class="p">},</span>
+        <span class="n">s</span> <span class="p">{</span> <span class="n">w</span><span class="p">.</span><span class="n">s</span> <span class="p">}</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">w</span><span class="p">.</span><span class="n">ptr</span><span class="p">)</span>
+            <span class="n">ptr</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unqiue</span><span class="o">&lt;</span><span class="n">Resource</span><span class="o">&gt;</span> <span class="p">(</span> <span class="o">*</span><span class="n">w</span><span class="p">.</span><span class="n">ptr</span> <span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Copy assignment operator</span>
+    <span class="n">Widget</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">Widget</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">w</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="k">this</span> <span class="o">===</span> <span class="o">&amp;</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+
+        <span class="n">Widget</span> <span class="n">tmp</span><span class="p">(</span><span class="n">w</span><span class="p">);</span> <span class="c1">// temp-move idiom</span>
+        <span class="o">*</span><span class="k">this</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">tmp</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">Widget</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span> <span class="n">Widget</span><span class="o">&amp;&amp;</span> <span class="n">w</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Cpp Blog: Move Semantics Part 1</b></h1>
+
+<p class="post-metadata text-muted">
+  19 September 2020 -  
+  <b>5 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#cpp">
+      <span class="tag badge badge-pill text-primary border border-primary">cpp</span>
+    </a>
+    </p>
+
+<p>[<img src="http://img.youtube.com/vi/St0MNEU5b0o/0.jpg" alt="Move Semantics" />](http://www.youtube.com/watch?v=St0MNEU5b0o “”)</p>
+
+<p>This is a video summary of Klaus Iglberger talk at CppCon 2019 titled “Back to Basics: Move Semantics (part 1 of 2)”.</p>
+
+<h2 id="what-does-it-mean-to-move-something">What does it mean to move something?</h2>
+<p>Moving an object in C++ allows us to avoid a lot of wasteful copying in our projects.</p>
+
+<p>Consider the function called below.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">createVector</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">};</span>
+<span class="p">}</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v2</span><span class="p">;</span>
+<span class="n">v2</span> <span class="o">=</span> <span class="n">createVector</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>Within the scope of <code class="language-plaintext highlighter-rouge">createVector()</code> a temporary object is created. On the assignment to <code class="language-plaintext highlighter-rouge">v2</code> we do not want to create a deep copy of the temporary object since it will be destroyed once the function goes out of scope. Move allows us to efficiently transfer data from the temporary vector to <code class="language-plaintext highlighter-rouge">v2</code>. In Klaus talk he simplifies a vector as having three fields: begin pointer, end pointer and pointer for end of memory allocated to vector. Our move operation will instead copy the three aforementioned pointers into <code class="language-plaintext highlighter-rouge">v2</code> from the temporary object and set the three pointers in the temporary object to null.</p>
+
+<h2 id="lvalue-vs-rvalue">Lvalue vs. Rvalue</h2>
+<p>An lvalue is an object that occupies an identifiable location in memory. An rvalue is an object that does not represent an identifiable locaiton in memory.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// a is lval, 2 is rval</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">b</span> <span class="o">=</span> <span class="s">"blah"</span><span class="p">;</span> <span class="c1">// b is lval, b is rval</span>
+<span class="k">auto</span> <span class="n">res</span> <span class="o">=</span> <span class="n">createVector</span><span class="p">();</span> <span class="c1">// res is lval, object created in function is rval</span>
+</code></pre></div></div>
+
+<p>Functions can take an lvalue or an rvalue as input parameter. <code class="language-plaintext highlighter-rouge">&amp;</code> for lvalue, <code class="language-plaintext highlighter-rouge">&amp;&amp;</code> for rvalue.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">someFunction</span><span class="p">(</span><span class="n">vector</span><span class="o">&amp;</span> <span class="n">vec</span><span class="p">);</span> <span class="c1">// 1. takes an lvalue</span>
+<span class="kt">void</span> <span class="nf">someFunction</span><span class="p">(</span><span class="n">vector</span><span class="o">&amp;&amp;</span> <span class="n">vec</span><span class="p">);</span> <span class="c1">// 2. takes an rvalue</span>
+
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v1</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">};</span>
+<span class="n">someFunction</span><span class="p">(</span><span class="n">v1</span><span class="p">);</span> <span class="c1">// calls (1)</span>
+<span class="n">someFunction</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">});</span> <span class="c1">// calls (2)</span>
+</code></pre></div></div>
+
+<h2 id="move-constructor-and-move-assignment-operator">Move Constructor and Move Assignment Operator</h2>
+<p>Since C++11, classes have two additional member functions: move constructor and move operator.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">SomeClass</span> <span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">str</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="n">SomeClass</span><span class="p">(</span><span class="n">SomeClass</span><span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">);</span> <span class="c1">// move constructor</span>
+    <span class="n">SomeClass</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">SomeClass</span><span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">);</span> <span class="c1">// move operator</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>The goal of the move constructor is to transfer the content of <code class="language-plaintext highlighter-rouge">s</code> into the current object and leave <code class="language-plaintext highlighter-rouge">s</code> in a valid but undefined state. In the code below we define a simple move constructor for <code class="language-plaintext highlighter-rouge">SomeClass</code>. We see that the move constructor simply calls <code class="language-plaintext highlighter-rouge">move</code> on all field of <code class="language-plaintext highlighter-rouge">s</code> to achieve the transfer of contents. Before we terminate, we set <code class="language-plaintext highlighter-rouge">s.ptr</code> to <code class="language-plaintext highlighter-rouge">nullptr</code> to ensure that <code class="language-plaintext highlighter-rouge">s</code> is left in a valid state. The C++ core guidelines also advises us to declare move constructors as <code class="language-plaintext highlighter-rouge">noexcept</code> because none of the operations in our move constructor should throw exceptions. According to Klaus’ experiments, using no except provided a 60% speedup.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">SomeClass</span><span class="o">::</span><span class="n">SomeClass</span><span class="p">(</span><span class="n">SomeClass</span><span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">:</span>
+    <span class="n">i</span> <span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">i</span><span class="p">)</span> <span class="p">),</span>
+    <span class="n">str</span> <span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">str</span><span class="p">)</span> <span class="p">),</span>
+    <span class="n">ptr</span> <span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">ptr</span><span class="p">)</span> <span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">s</span><span class="p">.</span><span class="n">ptr</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The goal of the move assignment operator is to clean of all visible resources, transfer the contents of s and leave <code class="language-plaintext highlighter-rouge">s</code> in a valid but undefined state. <code class="language-plaintext highlighter-rouge">delete</code> handles the deletion of cleaning up of resources. Once again, we move every single field of <code class="language-plaintext highlighter-rouge">s</code> into our current object. Finally, we leave <code class="language-plaintext highlighter-rouge">s</code> in a defined state by setting its <code class="language-plaintext highlighter-rouge">ptr</code> field to <code class="language-plaintext highlighter-rouge">nullptr</code>.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">SomeClass</span><span class="o">::</span><span class="n">SomeClass</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">SomeClass</span><span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">delete</span> <span class="n">ptr</span><span class="p">;</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">i</span><span class="p">);</span>
+    <span class="n">str</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">str</span><span class="p">);</span>
+    <span class="n">ptr</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">ptr</span><span class="p">);</span>
+
+    <span class="n">s</span><span class="p">.</span><span class="n">ptr</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="when-will-the-compiler-generate-move-operations-move-constructor-and-move-operator">When will the compiler generate move operations (move constructor and move operator)?</h2>
+<p>If no copy operation (constructor or assignment operator) or destructor is user-defined then the compiler will NOT generate move operations.</p>
+
+<p>If no move operation are user-defined, copy operations WILL be generated by the compiler.</p>
+
+<p>One thing to note is that definition member functions with <code class="language-plaintext highlighter-rouge">=default</code> or <code class="language-plaintext highlighter-rouge">=delete</code> are considered default operations.</p>
+
+<h2 id="when-to-define-your-move-operations">When to define your move operations?</h2>
+<p>In general try to avoid defining any move operations, copy operations and destructors yourself (rule of zero). But there are times when resource management needs to be user defined. The default move operations will simply call move on every single field of the object. Because we used a raw pointer in <code class="language-plaintext highlighter-rouge">SomeClass</code> above, we have to cleanup its resources with <code class="language-plaintext highlighter-rouge">delete ptr</code>.</p>
+
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>
