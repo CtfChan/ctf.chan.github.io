@@ -6,6 +6,11 @@ color:
 description: Common method of path parametrization
 ---
 
+<script type="text/javascript" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?
+config=TeX-MML-AM_CHTML"
+</script>
+
 ## Introduction
 Quintic splines are a common path parametrization in robotics. A quintic polynomial is a 5th order polynomial. Each dimension $(x, y)$ is represented as a quintic polynomial. The coefficients $a_i$ and $b_i$ can be solved for provided we give the robot's start position, velocity and acceleration ($x_s$, $v_s$, $a_s$) as well as the end position, velocity and acceleration ($x_f$, $v_f$, $a_f$); these are also known the boundary conditions.
 
