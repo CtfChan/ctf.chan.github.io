@@ -1,9 +1,9 @@
 ---
 title: "Robotics Blog: Quintic Polynomial"
-tags: [cpp]
+tags: [robotics]
 style:
 color: warning
-description:
+description: Common method of path parametrization
 ---
 
 # Quintic Splines
