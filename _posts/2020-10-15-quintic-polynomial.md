@@ -1,8 +1,8 @@
 ---
 title: "Robotics Blog: Quintic Polynomial"
 tags: [robotics]
-style:
-color: warning
+style: fill
+color: dark
 description: Common method of path parametrization
 ---
 <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>

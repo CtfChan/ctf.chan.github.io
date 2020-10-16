@@ -1,6 +1,14 @@
 [
   
     {
+      "title"    : "Robotics Blog: Quintic Polynomial",
+      "category" : "",
+      "tags"     : "robotics",
+      "url"      : "/blog/quintic-polynomial",
+      "date"     : "2020-10-15 00:00:00 -0400"
+    } ,
+  
+    {
       "title"    : "Cpp Blog: Exceptions",
       "category" : "",
       "tags"     : "cpp",
@@ -81,14 +89,6 @@
     } ,
   
     {
-      "title"    : "Cpp Blog: Smart Pointers in C++",
-      "category" : "",
-      "tags"     : "cpp, smart pointers",
-      "url"      : "https://medium.com/@christophertzechan/smart-pointers-in-c-b5e3d041ed0a?source=friends_link&sk=c24c4e4bdc3596a0d796a3bc52518c93",
-      "date"     : "2020-06-12 00:00:00 -0400"
-    } ,
-  
-    {
       "title"    : "Software Blog: OOP Basics",
       "category" : "",
       "tags"     : "oop",
@@ -105,19 +105,19 @@
     } ,
   
     {
-      "title"    : "Progamming Question Blog: X-sum",
+      "title"    : "Cpp Blog: Smart Pointers in C++",
+      "category" : "",
+      "tags"     : "cpp, smart pointers",
+      "url"      : "https://medium.com/@christophertzechan/smart-pointers-in-c-b5e3d041ed0a?source=friends_link&sk=c24c4e4bdc3596a0d796a3bc52518c93",
+      "date"     : "2020-04-03 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Leeetcode Blog: X-sum",
       "category" : "",
       "tags"     : "cpp",
       "url"      : "/blog/X-sum",
       "date"     : "2020-04-01 00:00:00 -0400"
-    } ,
-  
-    {
-      "title"    : "Robotics Blog: Quintic Polynomial",
-      "category" : "",
-      "tags"     : "robotics",
-      "url"      : "/blog/quintic-polynomial",
-      "date"     : "2020-03-14 00:00:00 -0400"
     } 
   
 ]

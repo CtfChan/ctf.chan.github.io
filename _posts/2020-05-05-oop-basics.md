@@ -1,7 +1,7 @@
 ---
 title: "Software Blog: OOP Basics"
 tags: [oop]
-style:
+style: fill
 color: info
 description: Basics of object-oriented programming.
 ---
