@@ -74,49 +74,49 @@
 <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
 
 <h2 id="introduction">Introduction</h2>
-<p>Quintic splines are a common path parametrization in robotics. A quintic polynomial is a 5th order polynomial. Each dimension $(x, y)$ is represented as a quintic polynomial. The coefficients $a_i$ and $b_i$ can be solved for provided we give the robot’s start position, velocity and acceleration ($x_s$, $v_s$, $a_s$) as well as the end position, velocity and acceleration ($x_f$, $v_f$, $a_f$); these are also known the boundary conditions.</p>
+<p>Quintic splines are a common path parametrization in robotics. A quintic polynomial is a 5th order polynomial. Each dimension <script type="math/tex">(x, y)</script> is represented as a quintic polynomial. The coefficients <script type="math/tex">a_i</script> and <script type="math/tex">b_i</script> can be solved for provided we give the robot’s start position, velocity and acceleration (<script type="math/tex">x_s</script>, <script type="math/tex">v_s</script>, <script type="math/tex">a_s</script>) as well as the end position, velocity and acceleration (<script type="math/tex">x_f</script>, <script type="math/tex">v_f</script>, <script type="math/tex">a_f</script>); these are also known the boundary conditions.</p>
 
 <script type="math/tex; mode=display">x(t) = a_o + a_1 t + a_2 t ^2 + a_3 t ^ 3 + a_4 t ^ 4 + a_5 t^5</script>
 
 <script type="math/tex; mode=display">y(t) = b_o + b_1 t + b_2 t ^2 + b_3 t ^ 3 + b_4 t ^ 4 + b_5 t^5</script>
 
 <h2 id="issues">Issues</h2>
-<p>There are discontinuities in the curvature paramatrization of quintic splines, which makes the curvature hard to constrain. From the equation of curvature $k(t)$ below, we can see that the denominator of the equation could be undefined.</p>
+<p>There are discontinuities in the curvature paramatrization of quintic splines, which makes the curvature hard to constrain. From the equation of curvature <script type="math/tex">k(t)</script> below, we can see that the denominator of the equation could be undefined.</p>
 
 <script type="math/tex; mode=display">k(t) = \frac{x'(t) y''(t) - y'(t)x''(t)}{ (x'(t)^2 + y'(t)^2)^{3/2}  }</script>
 
 <h2 id="solving-the-equation">Solving the Equation</h2>
-<p>Let us consider only <code class="language-plaintext highlighter-rouge">x(t)</code>. We can solve for $a_i$ provided that we are given the start position, velocity and acceleration ($x_s$, $v_s$, $a_s$) as well as the end position, velocity and acceleration ($x_f$, $v_f$, $a_f$); these are also known the boundary conditions of $x(t)$’s zeroth, first and second derivative.</p>
+<p>Let us consider only <script type="math/tex">x(t)</script>. We can solve for <script type="math/tex">a_i</script> provided that we are given the start position, velocity and acceleration (<script type="math/tex">x_s</script>, <script type="math/tex">v_s</script>, <script type="math/tex">a_s</script>) as well as the end position, velocity and acceleration (<script type="math/tex">x_f</script>, <script type="math/tex">v_f</script>, <script type="math/tex">a_f</script>); these are also known the boundary conditions of <script type="math/tex">x(t)</script> ‘s zeroth, first and second derivative.</p>
 
 <p>First derivative:
-$x’(t) = a_1 + 2 a_2 t  + 3 a_3 t ^ 2 + 4 a_4 t ^ 3 + 5 a_5 t^ 4   $</p>
+<script type="math/tex">x'(t) = a_1 + 2 a_2 t  + 3 a_3 t ^ 2 + 4 a_4 t ^ 3 + 5 a_5 t^ 4</script></p>
 
 <p>Second derivative:
-$x’‘(t) = 2 a_2 t  +  6 a_3 t + 12 a_4 t ^ 2 + 20 a_5 t^ 3    $</p>
+<script type="math/tex">x''(t) = 2 a_2 t  +  6 a_3 t + 12 a_4 t ^ 2 + 20 a_5 t^ 3</script></p>
 
-<p>Using our initial boundary conditions for $t = 0$ we can easily solve for $a_0$, $a_1$, $a_2$.</p>
+<p>Using our initial boundary conditions for $t = 0$ we can easily solve for <script type="math/tex">a_0</script>, <script type="math/tex">a_1</script>, <script type="math/tex">a_2</script>.</p>
 
-<p>$x(0) = x_s = a_0 $</p>
+<script type="math/tex; mode=display">x(0) = x_s = a_0</script>
 
-<p>$x’(0) = v_s = a_1 $</p>
+<script type="math/tex; mode=display">x'(0) = v_s = a_1</script>
 
-<p>$x’‘(0) = a_s = 2 a_2 $</p>
+<script type="math/tex; mode=display">x''(0) = a_s = 2 a_2</script>
 
-<p>Now lets solve for $a_3$, $a_4$, $a_5$ using our boundary conditions of $t = T$.</p>
+<p>Now lets solve for <script type="math/tex">a_3</script>, <script type="math/tex">a_4</script>, <script type="math/tex">a_5</script> using our boundary conditions of <script type="math/tex">t = T</script>.</p>
 
-<p>Eqn 1:  $x(T) = x_e = a_o + a_1 T + a_2 T ^2 + a_3 T ^ 3 + a_4 T ^ 4 + a_5 T^5   $</p>
+<p>Eqn 1:  <script type="math/tex">x(T) = x_e = a_o + a_1 T + a_2 T ^2 + a_3 T ^ 3 + a_4 T ^ 4 + a_5 T^5</script></p>
 
-<p>Eqn 2: $x’(T) = v_e = a_1 + 2 a_2 T  + 3 a_3 T ^ 2 + 4 a_4 T ^ 3 + 5 a_5 T^ 4   $</p>
+<p>Eqn 2: <script type="math/tex">x'(T) = v_e = a_1 + 2 a_2 T  + 3 a_3 T ^ 2 + 4 a_4 T ^ 3 + 5 a_5 T^ 4</script></p>
 
-<p>Eqn 3: $x’‘(T) = a_e = 2 a_2 T  +  6 a_3 T + 12 a_4 T ^ 2 + 20 a_5 T^ 3    $</p>
+<p>Eqn 3: <script type="math/tex">x''(T) = a_e = 2 a_2 T  +  6 a_3 T + 12 a_4 T ^ 2 + 20 a_5 T^ 3</script></p>
 
-<p>Since we have already solved for $a_0$, $a_1$, $a_2$, we can rearrange (1), (2) and (3) to have all of our unknwons on the left and known variables on the right side of the equality.</p>
+<p>Since we have already solved for <script type="math/tex">a_0</script>, <script type="math/tex">a_1</script>, <script type="math/tex">a_2</script>, we can rearrange (1), (2) and (3) to have all of our unknwons on the left and known variables on the right side of the equality.</p>
 
-<p>Eqn 1:  $ a_3 T ^ 3 + a_4 T ^ 4 + a_5 T^5  = x_e - a_0 - a_1 T - a_2 T ^2  $</p>
+<p>Eqn 1:  <script type="math/tex">a_3 T ^ 3 + a_4 T ^ 4 + a_5 T^5  = x_e - a_0 - a_1 T - a_2 T ^2</script></p>
 
-<p>Eqn 2:  $ 3 a_3 T ^ 2 + 4 a_4 T ^ 3 + 5 a_5 T^4  = v_e - a_1 - a_1 T - 2 a_2 T $</p>
+<p>Eqn 2:  <script type="math/tex">3 a_3 T ^ 2 + 4 a_4 T ^ 3 + 5 a_5 T^4  = v_e - a_1 - a_1 T - 2 a_2 T</script></p>
 
-<p>Eqn 3:  $ 6 a_3 T + 12 a_4 T ^ 2 + 20 a_t T^3 = a_e - 2 a_2 $</p>
+<p>Eqn 3:  <script type="math/tex">6 a_3 T + 12 a_4 T ^ 2 + 20 a_t T^3 = a_e - 2 a_2</script></p>
 
 <p>The three equations above can now be conveniently factored into a system of linear equations $Ax=b$.</p>
 
@@ -138,7 +138,7 @@ v_e - a_1 - a_1 T - 2 a_2 T \\
 a_e - 2 a_2
 \end{pmatrix} %]]></script>
 
-<p>Since $T \geq 0$ our A matrix will be invertible and we can solve for $a_3$, $a_4$, $a_5$ using $x = A^{-1} b$.</p>
+<p>Since <script type="math/tex">T \geq 0</script> our A matrix will be invertible and we can solve for <script type="math/tex">a_3</script>, <script type="math/tex">a_4</script>, <script type="math/tex">a_5</script> using <script type="math/tex">x = A^{-1} b</script>.</p>
 
 
 
