@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Robotics Blog: Cubic Splines</b></h1>
+
+<p class="post-metadata text-muted">
+  16 October 2020 -  
+  <b>5 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#robotics">
+      <span class="tag badge badge-pill text-primary border border-primary">robotics</span>
+    </a>
+    </p>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_CHTML"></script>
+
+<h2 id="cubic-splines">Cubic Splines</h2>
+<p>A cubic spline is constructed from a series of piecewise third degree polynomials. Given <script type="math/tex">n</script> control points 
+<script type="math/tex">\{(x_0,y_0), ... , (x_{n-1}, y_{n-1}) \}</script></p>
+
+<p>We can construct <script type="math/tex">n-1</script> segments where the $i$th segment is computed as:</p>
+
+<script type="math/tex; mode=display">f_i (x) = a_i + b_i (x - x_i) + c_i (x - x_i)^2 + d_i (x - x_i)^3</script>
+
+<p>with <script type="math/tex">x \in [x_i, x_{i+1}]</script></p>
+
+<p>Typically we set the 2nd derivative of each <script type="math/tex">f_i</script> to 0 at the endpoints to create a system of <script type="math/tex">n-2</script> equations that we can solve for <script type="math/tex">Ax=b</script>.</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+A = 
+\begin{bmatrix}
+1 &  &  \\ 
+  & 2(h_0 + h_1) & h_1 \\ 
+  & h_1 & 2 (h_1 + h_2) & h_2 \\
+  &     &   h_2 &  2(h_2 + h_3) & h_3 \\
+  &     &         & \ddots & \ddots & \ddots &  \\
+  &     &         &     & &    &  h_{n-3}      &    2 (h_{n-3} + h_{n-2})   & & 0 \\
+  &     &         &    & &     &        &   0    & & 1
+\end{bmatrix} %]]></script>
+
+<script type="math/tex; mode=display">x = 
+\begin{bmatrix}
+c_0 \\
+c_1 \\
+\vdots \\
+c_{n-1}
+\end{bmatrix}</script>
+
+<script type="math/tex; mode=display">b = 
+\begin{bmatrix}
+0 \\
+\frac{3 (y_2 - y_1)}{h_1} - \frac{3 (y_1 - y_0)}{h_0} \\
+\vdots \\
+\frac{3 (y_{n-1} - y_{n-2})}{h_{n-2}} - \frac{3 (y_{n-2} - y_{n-3})}{h_{n-3}} \\
+0
+\end{bmatrix}</script>
+
+<p>Having solved for all <script type="math/tex">c_i</script>s solve for <script type="math/tex">d_i</script> and <script type="math/tex">b_i</script> using:</p>
+
+<script type="math/tex; mode=display">b_i  = \frac{(y_{i+1} - y_{i})}{h_i} - \frac{1}{3} (2c_i + c_{i+1}) h_i</script>
+
+<script type="math/tex; mode=display">d_i = \frac{c_{i+1} - c_{i}}{3 h_i}</script>
+
+<h2 id="derivation">Derivation</h2>
+
+<p>We seek to solve for <script type="math/tex">a_i</script>, <script type="math/tex">b_i</script>, <script type="math/tex">c_i</script> and <script type="math/tex">d_i</script> for each segment of the spline with <script type="math/tex">i = 0, ..., n-1</script>.</p>
+
+<p>Since all <script type="math/tex">(x-x_i)</script> terms go zero when <script type="math/tex">x=x_i</script>, we can easily get <script type="math/tex">a_i</script> with <script type="math/tex">f_i(x_i) = a_i = y_i</script>.</p>
+
+<p>We require our function function to be continuous and twice differentiable. The zeroth, first and second derivative with respect to x for each segment is reproduced below.</p>
+
+<script type="math/tex; mode=display">f_i (x) = a_i + b_i (x - x_i) + c_i (x - x_i)^2 + d_i (x - x_i)^3</script>
+
+<script type="math/tex; mode=display">f_i' (x) = b_i+ 2 c_i (x - x_i) + 3 d_i (x - x_i) ^ 2</script>
+
+<script type="math/tex; mode=display">f_i'' (x) = 2 c_i + 6 d_i (x - x_i)</script>
+
+<p>Let us define <script type="math/tex">h_i = x_{i+1} - x_i</script> and substitute <script type="math/tex">a_i = y_i</script> from here on.</p>
+
+<ul>
+  <li>Continuous zeroth derivative means <script type="math/tex">f_i(x_{i+1}) = y_{i+1}</script>. For <script type="math/tex">i = 0, ..., n-1</script>.</li>
+</ul>
+
+<script type="math/tex; mode=display">y_i + b_i (h_i) + c_i (h_i)^2 + d_i (h_i) ^3 = y_{i+1}</script>
+
+<ul>
+  <li>Continuous first derivative means <script type="math/tex">f_{i}'(x_{i+1}) = f'_{i+1}(x_{i+1})</script>. For <script type="math/tex">i = 0, ..., n-2</script>.</li>
+</ul>
+
+<script type="math/tex; mode=display">b_i+ 2 c_i (h_i) + 3 d_i (h_i) ^ 2 = b_{i+1}</script>
+
+<ul>
+  <li>Continuous second derivative means <script type="math/tex">f_{i}^{''}(x_{i+1}) = f_{i+1}^{''}(x_{i+1})</script>. For <script type="math/tex">i = 0, ..., n-2</script>.</li>
+</ul>
+
+<script type="math/tex; mode=display">2 c_i + 6 d_i (h_i) = 2 c_{i+1}</script>
+
+<p>From the three equations above, we seek to express <script type="math/tex">d_i</script> and <script type="math/tex">b_i</script> in terms of <script type="math/tex">c_i</script>.</p>
+
+<p>Lets start off with expressing $d_i$ in terms of <script type="math/tex">c_i</script> using <script type="math/tex">f_{i}^{''}(x_{i+1}) = f_{i+1}^{''} (x_{i+1})</script></p>
+
+<script type="math/tex; mode=display">2 c_i + 6 d_i (h_i) = 2 c_{i+1}</script>
+
+<script type="math/tex; mode=display">d_i = \frac{c_{i+1} - c_{i}}{3 h_i}</script>
+
+<p>We can also express <script type="math/tex">b_i</script> in terms of <script type="math/tex">c_i</script> using  <script type="math/tex">f_i(x_{i+1}) = y_{i+1}</script>.</p>
+
+<script type="math/tex; mode=display">y_i + b_i (h_i) + c_i (h_i)^2 + d_i (h_i) ^3 = y_{i+1}</script>
+
+<script type="math/tex; mode=display">b_i (h_i) = (y_{i+1} - y_{i}) - c_i (h_i)^2 - d_i (h_i) ^3</script>
+
+<script type="math/tex; mode=display">b_i  = \frac{(y_{i+1} - y_{i})}{h_i}- c_i h_i - d_i (h_i) ^2</script>
+
+<p>Sub in <script type="math/tex">d_i</script>.</p>
+
+<script type="math/tex; mode=display">b_i  = \frac{(y_{i+1} - y_{i})}{h_i}- c_i h_i - \frac{c_{i+1} - c_i}{3 h_i} (h_i) ^2</script>
+
+<script type="math/tex; mode=display">b_i  = \frac{(y_{i+1} - y_{i})}{h_i}- c_i h_i - \frac{c_{i+1} - c_i}{3 } (h_i)</script>
+
+<script type="math/tex; mode=display">b_i  = \frac{(y_{i+1} - y_{i})}{h_i} - \frac{c_{i+1} h_i}{3} - \frac{2 c_i h_i}{3}</script>
+
+<script type="math/tex; mode=display">b_i  = \frac{(y_{i+1} - y_{i})}{h_i} - \frac{1}{3} (2c_i + c_{i+1}) h_i</script>
+
+<p>Subbing our expressions for <script type="math/tex">b_i</script> and <script type="math/tex">d_i</script> into the equation formed from  <script type="math/tex">f_{i}'(x_{i+1}) = f'_{i+1}(x_{i+1})</script>.</p>
+
+<script type="math/tex; mode=display">b_i+ 2 c_i (h_i) + 3 d_i (h_i) ^ 2 = b_{i+1}</script>
+
+<script type="math/tex; mode=display">[\frac{(y_{i+1} - y_{i})}{h_i} - \frac{1}{3} (2c_i + c_{i+1}) h_i] + 2 c_i h_i  + 3[ \frac{c_{i+1} - c_{i}}{3 h_i}] h_i^2 =   \frac{(y_{i+2} - y_{i+1})}{h_{i+1}} - \frac{1}{3} (2c_{i+1} + c_{i+2}) h_{i+1}</script>
+
+<script type="math/tex; mode=display">\vdots</script>
+
+<script type="math/tex; mode=display">h_i c_i + 2(h_i + h_{i+1}) c_{i+1} +  h_{i+1} c_{i+2} = 3 \frac{y_{i+2} - y_{i+1}   }{h_{i+1}} - 3 \frac{y_{i+1} - y_{i} }{h_i}</script>
+
+<p>Because we set the second derivative to zero at the end points of the spline, we can set <script type="math/tex">c_0 = c_{n-1} = 0</script>. So we only have to solve for <script type="math/tex">n-2</script> <script type="math/tex">c_i</script>’s. Conveniently, we have <script type="math/tex">n-2</script> “versions” of the equation above with <script type="math/tex">i = 0, ..., n-2</script>. This allows us to create a system of linear equations of the form <script type="math/tex">Ax=b</script> where we can solve for all <script type="math/tex">c_i</script>’s. The top left and bottom right 1s in the <script type="math/tex">A</script> matrix encode <script type="math/tex">c_0 = c_{n-1} = 0</script>, the rest of the matrix expresses encodes the <script type="math/tex">n-2</script> equations for <script type="math/tex">c_i</script></p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+A = 
+\begin{bmatrix}
+1 &  &  \\ 
+  & 2(h_0 + h_1) & h_1 \\ 
+  & h_1 & 2 (h_1 + h_2) & h_2 \\
+  &     &   h_2 &  2(h_2 + h_3) & h_3 \\
+  &     &         & \ddots & \ddots & \ddots &  \\
+  &     &         &     & &    &  h_{n-3}      &    2 (h_{n-3} + h_{n-2})   & & 0 \\
+  &     &         &    & &     &        &   0    & & 1
+\end{bmatrix} %]]></script>
+
+<script type="math/tex; mode=display">x = 
+\begin{bmatrix}
+c_0 \\
+c_1 \\
+\vdots \\
+c_{n-1}
+\end{bmatrix}</script>
+
+<script type="math/tex; mode=display">b = 
+\begin{bmatrix}
+0 \\
+\frac{3 (y_2 - y_1)}{h_1} - \frac{3 (y_1 - y_0)}{h_0} \\
+\vdots \\
+\frac{3 (y_{n-1} - y_{n-2})}{h_{n-2}} - \frac{3 (y_{n-2} - y_{n-3})}{h_{n-3}} \\
+0
+\end{bmatrix}</script>
+
+<p>Having solved for all <script type="math/tex">c_i</script>s we can use our expressions for <script type="math/tex">d_i</script> and <script type="math/tex">b_i</script> in terms of <script type="math/tex">c_i</script> to solve for our final coefficients.</p>
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

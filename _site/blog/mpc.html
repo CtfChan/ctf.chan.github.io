@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Robotics Blog: Model Predictive Control</b></h1>
+
+<p class="post-metadata text-muted">
+  16 October 2020 -  
+  <b>13 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#robotics">
+      <span class="tag badge badge-pill text-primary border border-primary">robotics</span>
+    </a>
+    </p>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_CHTML"></script>
+
+<p>In this post we will be going over a simple MPC Controller for 2D path tracking in a robot that uses the bicycle model.</p>
+
+<p>This post complements an implementation of MPC I made in my LearnRoboticsCpp repository.</p>
+
+<p><a href="https://github.com/CtfChan/LearnRoboticsCpp/blob/master/src/path_tracking/mpc.cpp">Source File</a></p>
+
+<p><a href="https://github.com/CtfChan/LearnRoboticsCpp/blob/master/include/path_tracking/mpc.hpp">Header File</a></p>
+
+<h2 id="model-predictive-control">Model Predictive Control</h2>
+<p>Model predictive control is common method used for path tracking in mobile robotics. MPC uses a nonlinear model of the plant and a parametrized controller to predict errors of the system within a small future window. The controller then numerically optimizes a sum of weight squared errors in the system to compute a series of control inputs for the system. This optimization process is repeatedly applied to counteract the effect of disturbances.</p>
+
+<h2 id="bicycle-model">Bicycle Model</h2>
+<p>We denote our time-varying state <script type="math/tex">z_t</script> using a four dimensional vector (x, y) for position, v for velocity and <script type="math/tex">\phi</script> for the yaw angle.</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+z_t = \begin{bmatrix}
+x_t & y_t & v_t & \phi_t
+\end{bmatrix} ^ T %]]></script>
+
+<p>The robot accepts two control inputs: a for acceleraton and <script type="math/tex">\delta</script> for steering angle.
+<script type="math/tex">% <![CDATA[
+u_t = \begin{bmatrix}
+a_t & \delta_t
+\end{bmatrix} ^ T %]]></script></p>
+
+<p>The differential equations describing the robot’s motion are as follows. We omit <script type="math/tex">t</script> for brevity and express the first derivative of each state as
+<script type="math/tex">z' = 
+\begin{bmatrix}
+x' \\ 
+y' \\ 
+v' \\ 
+\phi'
+\end{bmatrix} 
+= \begin{bmatrix}
+v cos( \phi)) \\ 
+v sin( \phi ))\\ 
+a \\ 
+\frac{ v \tan{ \delta } }{L}
+\end{bmatrix}</script></p>
+
+<p>For small timesteps, we can approximate a new state <script type="math/tex">z_{t+1}</script> as</p>
+
+<script type="math/tex; mode=display">z_{t+1} = f(z_t, u_t, \Delta t) = 
+\begin{bmatrix}
+x_t + v_t sin(\phi_t) \Delta t \\ 
+y_t + v_t cos(\phi_t) \Delta t   \\ 
+\phi_t + \frac{v_t \tan(\delta_t) \Delta t}{L} \\ 
+v_t + a_t \Delta t   
+\end{bmatrix}</script>
+
+<h2 id="optmization">Optmization</h2>
+<p>At each time step t, we seek to find a control policy <script type="math/tex">U$. $u_{i|j}</script> denotes predicted control at time <script type="math/tex">j</script> for timestep <script type="math/tex">i</script>.</p>
+
+<script type="math/tex; mode=display">U = \{ u_{t|t}, u_{t+1|t}, u_{t+2|t}, ... \}</script>
+
+<p>This control policy should minimize a cost function <script type="math/tex">J</script> that considers the following information: motion model of the robot, closeness to trajectory, the magnitude of controls required and the difference between controls applied at consecutive timesteps (this helps ensure passenger comfort).</p>
+
+<p>The mathematical expression that encodes these four factors is as follows:</p>
+
+<script type="math/tex; mode=display">J(z(t), U) = \sum_{j=t}^{T} \bar z_{j|t}^T Q \bar z_{j|t} + \delta z_{j|t}^T Q' \delta z_{j|t} + u_{j|t}^T R u_{j|t} + \delta u_{j|t}^T R' \delta u_{j|t}</script>
+
+<ul>
+  <li><script type="math/tex">T</script> is the time horizon we are optimizing over. The larger this value, the more computationally expensive your optimization problem will be.</li>
+  <li><script type="math/tex">\bar z_{j|t} = z_{j+1|t} - f(z_{j|t}, u_{j|t}, \Delta t)</script>
+This first term constrains the motion of the robot using the bicycle model.</li>
+  <li><script type="math/tex">\delta z_{j|t} =  z_{j|t, ref} - z_{j|t}</script>. 
+This is the difference between the robot’s desired and current state at some time t. So the second term penalizes differences from the reference trajectory.</li>
+  <li>The third term penalizes large control inputs into the system.</li>
+  <li><script type="math/tex">\delta u_{j|t} =  u_{j+1|t} - u_{j|t}</script>. 
+This is the difference between consecutive control inputs. The fourth term ensures a somewhat smoothe control input.</li>
+</ul>
+
+<p><script type="math/tex">Q, Q' \in R^{4 x 4}</script> and <script type="math/tex">R,R' \in R^{2 x 2}</script>  are matrices that denote the penalty apply to each term in the cost function. For instance, a matrix with high Q values means that you want to discentivize the optimization problem from deviating from the reference trajectory too much.</p>
+
+<p>Additionally, our optimization problem is subject to the following contraints:</p>
+<ol>
+  <li>
+    <p>Maximum acceleration
+<script type="math/tex">% <![CDATA[
+a_t < a_{max} %]]></script></p>
+  </li>
+  <li>
+    <p>Maximum steering angle</p>
+  </li>
+</ol>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\delta_t < \delta_{max} %]]></script>
+
+<ol>
+  <li>
+    <p>Allowable velocities
+<script type="math/tex">% <![CDATA[
+v_{min} < v_t < v_{max} %]]></script></p>
+  </li>
+  <li>
+    <p>First state in the optimization output should be equal to our current state
+<script type="math/tex">z_1 = z_{initial}</script></p>
+  </li>
+</ol>
+
+<h2 id="implementation">Implementation</h2>
+<p>This part provides implementation details regard the MPC optimization part of the code in <code class="language-plaintext highlighter-rouge">mpcSolve</code> function.</p>
+
+<p>Let us first define the variables used in our optimization. <code class="language-plaintext highlighter-rouge">vars</code> is a CPPAD vector that will store all the variables in the optimization. Note that the velocity and yaw was swapped in this implementation.</p>
+
+<p>dimension of <code class="language-plaintext highlighter-rouge">vars</code> = dimensions of state vector x time horizon + dimensions of control vector x (time horizon - 1)</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+vars =
+\begin{bmatrix}
+x_1 & ... & x_T & y_1 & ... & y_T &  \phi_1 & ... & \phi_T &v_1 & ... & v_T && \delta_1 & ... & \delta_T & a_1 & ... & a_T \\
+\end{bmatrix} %]]></script>
+
+<p>We use the variables <code class="language-plaintext highlighter-rouge">VAR_start</code> (e.g. <code class="language-plaintext highlighter-rouge">x_start</code>, <code class="language-plaintext highlighter-rouge">y_start</code>, <code class="language-plaintext highlighter-rouge">yaw_start</code> ) to denote the start index for a variable in the vector.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Dvector</span> <span class="nf">vars</span><span class="p">(</span><span class="n">n_vars_</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n_vars_</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">vars</span><span class="p">[</span><span class="n">x_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+<span class="n">vars</span><span class="p">[</span><span class="n">y_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">;</span>
+<span class="n">vars</span><span class="p">[</span><span class="n">yaw_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">yaw</span><span class="p">;</span>
+<span class="n">vars</span><span class="p">[</span><span class="n">v_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">vars_lowerbound</code> and <code class="language-plaintext highlighter-rouge">vars_upperbound</code> will be the same size of <code class="language-plaintext highlighter-rouge">vars</code> and defines the lower and upperbound for each variable. Thes are the variable constraints (1), (2) and (3).</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Lower and upper limits for x</span>
+<span class="n">Dvector</span> <span class="nf">vars_lowerbound</span><span class="p">(</span><span class="n">n_vars_</span><span class="p">);</span>
+<span class="n">Dvector</span> <span class="nf">vars_upperbound</span><span class="p">(</span><span class="n">n_vars_</span><span class="p">);</span>
+
+<span class="c1">// Set all non-actuators upper and lowerlimits</span>
+<span class="c1">// to the max negative and positive values.</span>
+<span class="c1">// NOTE there mush be both lower and upper bounds for all vars!!!!!</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n_vars_</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">vars_lowerbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">10000000.0</span><span class="p">;</span>
+    <span class="n">vars_upperbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">10000000.0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">i</span> <span class="o">=</span> <span class="n">delta_start_</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">delta_start_</span> <span class="o">+</span> <span class="n">T_</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">vars_lowerbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span>  <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">max_steer</span><span class="p">);</span>
+    <span class="n">vars_upperbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">max_steer</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">i</span> <span class="o">=</span> <span class="n">a_start_</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">a_start_</span> <span class="o">+</span> <span class="n">T_</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">vars_lowerbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">max_accel</span><span class="p">);</span>
+    <span class="n">vars_upperbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">max_accel</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">i</span> <span class="o">=</span> <span class="n">v_start_</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">v_start_</span> <span class="o">+</span> <span class="n">T_</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">vars_lowerbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">min_speed</span><span class="p">);</span>
+    <span class="n">vars_upperbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">max_speed</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>For IPOPT, we also need to define the function constraints of the problem. The only function constraint we need to apply is that the initial conditions stay the same.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Dvector</span> <span class="nf">constraints_lowerbound</span><span class="p">(</span><span class="n">n_constraints_</span><span class="p">);</span>
+<span class="n">Dvector</span> <span class="nf">constraints_upperbound</span><span class="p">(</span><span class="n">n_constraints_</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n_constraints_</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">constraints_lowerbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">constraints_upperbound</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">constraints_lowerbound</span><span class="p">[</span><span class="n">x_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+<span class="n">constraints_lowerbound</span><span class="p">[</span><span class="n">y_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">;</span>
+<span class="n">constraints_lowerbound</span><span class="p">[</span><span class="n">yaw_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">yaw</span><span class="p">;</span>
+<span class="n">constraints_lowerbound</span><span class="p">[</span><span class="n">v_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+
+<span class="n">constraints_upperbound</span><span class="p">[</span><span class="n">x_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+<span class="n">constraints_upperbound</span><span class="p">[</span><span class="n">y_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">;</span>
+<span class="n">constraints_upperbound</span><span class="p">[</span><span class="n">yaw_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">yaw</span><span class="p">;</span>
+<span class="n">constraints_upperbound</span><span class="p">[</span><span class="n">v_start_</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>We define a struct <code class="language-plaintext highlighter-rouge">FUNC_EVAL</code> with a function 
+<code class="language-plaintext highlighter-rouge">void operator()(ADvector &amp;fg, const ADvector &amp;vars)</code> which will be called by the solver.</p>
+
+<p>Here we add the third and fourth terms in $J$ from above. We chose</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+R = 
+\begin{bmatrix}
+ 0.01 & 0 \\ 
+ 0 & 0.01
+\end{bmatrix} %]]></script>
+
+<script type="math/tex; mode=display">% <![CDATA[
+R' = 
+\begin{bmatrix}
+ 0.01 & 0 \\ 
+ 0 & 1
+\end{bmatrix} %]]></script>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">fg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">T_</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">vars</span><span class="p">[</span><span class="n">a_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">vars</span><span class="p">[</span><span class="n">delta_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">T_</span> <span class="o">-</span> <span class="mi">2</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">vars</span><span class="p">[</span><span class="n">a_start_</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">vars</span><span class="p">[</span><span class="n">a_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">vars</span><span class="p">[</span><span class="n">delta_start_</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">vars</span><span class="p">[</span><span class="n">delta_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Finally, we encode the first and second terms in $J$. Here we chose
+<script type="math/tex">% <![CDATA[
+Q = 
+\begin{bmatrix}
+1 & 0 & 0 & 0\\ 
+0 & 1 & 0 & 0 \\ 
+0 & 0 & 1 & 0 \\ 
+0 & 0 & 0 & 1
+\end{bmatrix} %]]></script></p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+Q' = 
+\begin{bmatrix}
+1 & 0 & 0 & 0\\ 
+0 & 1 & 0 & 0 \\ 
+0 & 0 & 0.5 & 0 \\ 
+0 & 0 & 0 & 0.5
+\end{bmatrix} %]]></script>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// The rest of the constraints</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">T_</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// The state at time t+1 .</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">x_start_</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">y_start_</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">yaw1</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">yaw_start_</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">v1</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">v_start_</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span>
+
+    <span class="c1">// The state at time t.</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">x0</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">x_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">];</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">y_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">];</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">yaw0</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">yaw_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">];</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">v0</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">v_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">];</span>
+
+    <span class="c1">// Only consider the actuation at time t.</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">delta0</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">delta_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">];</span>
+    <span class="n">AD</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">a0</span> <span class="o">=</span> <span class="n">vars</span><span class="p">[</span><span class="n">a_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">];</span>
+
+    <span class="c1">// constraint with the dynamic model</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">-</span> <span class="p">(</span><span class="n">x0</span> <span class="o">+</span> <span class="n">v0</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">cos</span><span class="p">(</span><span class="n">yaw0</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt_</span><span class="p">);</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">y1</span> <span class="o">-</span> <span class="p">(</span><span class="n">y0</span> <span class="o">+</span> <span class="n">v0</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="n">yaw0</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt_</span><span class="p">);</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">2</span> <span class="o">+</span> <span class="n">yaw_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">yaw1</span> <span class="o">-</span> <span class="p">(</span><span class="n">yaw0</span> <span class="o">+</span> <span class="n">v0</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">tan</span><span class="p">(</span><span class="n">delta0</span><span class="p">)</span> <span class="o">/</span> <span class="n">L_</span> <span class="o">*</span> <span class="n">dt_</span><span class="p">);</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">2</span> <span class="o">+</span> <span class="n">v_start_</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v1</span> <span class="o">-</span> <span class="p">(</span><span class="n">v0</span> <span class="o">+</span> <span class="n">a0</span> <span class="o">*</span> <span class="n">dt_</span><span class="p">);</span>
+    
+    <span class="c1">// cost with the ref traj</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">xref_</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">x0</span> <span class="o">+</span> <span class="n">v0</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">cos</span><span class="p">(</span><span class="n">yaw0</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt_</span><span class="p">),</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">xref_</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">y0</span> <span class="o">+</span> <span class="n">v0</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="n">yaw0</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt_</span><span class="p">),</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">xref_</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">yaw0</span> <span class="o">+</span> <span class="n">v0</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">tan</span><span class="p">(</span><span class="n">delta0</span><span class="p">)</span> <span class="o">/</span> <span class="n">L_</span> <span class="o">*</span> <span class="n">dt_</span><span class="p">),</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="n">fg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">CppAD</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">xref_</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">v0</span> <span class="o">+</span> <span class="n">a0</span> <span class="o">*</span> <span class="n">dt_</span><span class="p">),</span> <span class="mi">2</span><span class="p">);</span>
+<span class="p">}</span>   
+</code></pre></div></div>
+<p>With all the required variables defined we can can now ask IPOPT to solve our equation.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// place to return solution</span>
+<span class="n">CppAD</span><span class="o">::</span><span class="n">ipopt</span><span class="o">::</span><span class="n">solve_result</span><span class="o">&lt;</span><span class="n">Dvector</span><span class="o">&gt;</span> <span class="n">solution</span><span class="p">;</span>
+
+<span class="n">CppAD</span><span class="o">::</span><span class="n">ipopt</span><span class="o">::</span><span class="n">solve</span><span class="o">&lt;</span><span class="n">Dvector</span><span class="p">,</span> <span class="n">FUNC_EVAL</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">options</span><span class="p">,</span> <span class="n">vars</span><span class="p">,</span> <span class="n">vars_lowerbound</span><span class="p">,</span> <span class="n">vars_upperbound</span><span class="p">,</span> <span class="n">constraints_lowerbound</span><span class="p">,</span>
+    <span class="n">constraints_upperbound</span><span class="p">,</span> <span class="n">func_eval</span><span class="p">,</span> <span class="n">solution</span><span class="p">);</span>
+</code></pre></div></div>
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

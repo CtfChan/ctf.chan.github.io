@@ -1,10 +1,26 @@
 [
   
     {
-      "title"    : "Robotics Blog: Quintic Polynomial",
+      "title"    : "Robotics Blog: Model Predictive Control",
       "category" : "",
       "tags"     : "robotics",
-      "url"      : "/blog/quintic-polynomial",
+      "url"      : "/blog/mpc",
+      "date"     : "2020-10-16 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Robotics Blog: Cubic Splines",
+      "category" : "",
+      "tags"     : "robotics",
+      "url"      : "/blog/cubic-splines",
+      "date"     : "2020-10-16 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Robotics Blog: Quintic Polynomials",
+      "category" : "",
+      "tags"     : "robotics",
+      "url"      : "/blog/quintic-polynomials",
       "date"     : "2020-10-15 00:00:00 -0400"
     } ,
   
