@@ -124,7 +124,7 @@ v_t + a_t \Delta t
 \end{bmatrix}</script>
 
 <h2 id="optmization">Optmization</h2>
-<p>At each time step t, we seek to find a control policy <script type="math/tex">U$. $u_{i|j}</script> denotes predicted control at time <script type="math/tex">j</script> for timestep <script type="math/tex">i</script>.</p>
+<p>At each time step t, we seek to find a control policy <script type="math/tex">U</script>. <script type="math/tex">u_{i|j}</script> denotes predicted control at time <script type="math/tex">j</script> for timestep <script type="math/tex">i</script>.</p>
 
 <script type="math/tex; mode=display">U = \{ u_{t|t}, u_{t+1|t}, u_{t+2|t}, ... \}</script>
 
@@ -142,7 +142,7 @@ This first term constrains the motion of the robot using the bicycle model.</li>
 This is the difference between the robot’s desired and current state at some time t. So the second term penalizes differences from the reference trajectory.</li>
   <li>The third term penalizes large control inputs into the system.</li>
   <li><script type="math/tex">\delta u_{j|t} =  u_{j+1|t} - u_{j|t}</script>. 
-This is the difference between consecutive control inputs. The fourth term ensures a somewhat smoothe control input.</li>
+This is the difference between consecutive control inputs. The fourth term ensures a somewhat smooth control input.</li>
 </ul>
 
 <p><script type="math/tex">Q, Q' \in R^{4 x 4}</script> and <script type="math/tex">R,R' \in R^{2 x 2}</script>  are matrices that denote the penalty apply to each term in the cost function. For instance, a matrix with high Q values means that you want to discentivize the optimization problem from deviating from the reference trajectory too much.</p>

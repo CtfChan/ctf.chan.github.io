@@ -1,6 +1,22 @@
 [
   
     {
+      "title"    : "Robotics Blog: State Lattice",
+      "category" : "",
+      "tags"     : "robotics",
+      "url"      : "/blog/state-lattice",
+      "date"     : "2020-10-18 00:00:00 -0400"
+    } ,
+  
+    {
+      "title"    : "Robotics Blog: Trajectory Generator",
+      "category" : "",
+      "tags"     : "robotics",
+      "url"      : "/blog/trajectory-generator",
+      "date"     : "2020-10-17 00:00:00 -0400"
+    } ,
+  
+    {
       "title"    : "Robotics Blog: Model Predictive Control",
       "category" : "",
       "tags"     : "robotics",
@@ -129,7 +145,7 @@
     } ,
   
     {
-      "title"    : "Leeetcode Blog: X-sum",
+      "title"    : "Leetcode Blog: X-sum",
       "category" : "",
       "tags"     : "cpp",
       "url"      : "/blog/X-sum",

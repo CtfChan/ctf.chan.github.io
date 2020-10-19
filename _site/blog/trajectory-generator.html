@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Passionate C++ and robotics programmer.">
+
+  <title>Chris Chan</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>Chris Chan</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Robotics Blog: Trajectory Generator</b></h1>
+
+<p class="post-metadata text-muted">
+  17 October 2020 -  
+  <b>9 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#robotics">
+      <span class="tag badge badge-pill text-primary border border-primary">robotics</span>
+    </a>
+    </p>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_CHTML"></script>
+
+<p>In this post we will be creating a simplified example of the trajectory generation method outlined in “Optimal rough terrain trajectory generation for wheeled mobile robots” by Thomas M. Howard and Alonzo Kelly.</p>
+
+<h2 id="overview">Overview</h2>
+<p>The objective of trajectory generation is to generate a set of controls u to satisfy some constraints on our vehicle C subject to a set of governing differential equations <script type="math/tex">f(x, u, t)</script> describing system dynamics.</p>
+
+<script type="math/tex; mode=display">\dot x = f(x, u, t)</script>
+
+<script type="math/tex; mode=display">C(x, t) = \textbf{0}</script>
+
+<p>The full process of the algorithm is highlighted in light blue in the diagram below. The algorithm takes in your robot’s initial and final state, control parameters and vehicle model as input. It then outputs the trajectory that the robot should follow as well as the control parameters required to acheive that trajectory.</p>
+
+<p>The algorithm iteratively optimizes the control parameters until the robot until the cost (generally defined as the difference between the output trajectory’s final state and the robot’s desired final state) is below a certain threshold.</p>
+
+<p><img src="/assets/trajectory_generation.png" alt="" /></p>
+
+<h2 id="in-depth-example">In-depth Example</h2>
+
+<h3 id="inputs">Inputs</h3>
+<p>Let us assume that we have an Ackerman steering robot with a constant velocity of 3m/s. The initial and final state will be given by <script type="math/tex">(x_i, y_i, \theta_i)</script> and <script type="math/tex">(x_f, y_f, \theta_f)</script>.</p>
+
+<p>We approximate our steer k over time t with a quadratic function <script type="math/tex">k(t) = a t^2 + b t + c</script> where a, b and c are coefficients that will be determined. We wish find a feasible trajectory from our start to the goal using a quadratic time varying steer.</p>
+
+<p>Our optimizer will be given an initial steer <script type="math/tex">k_0</script> and an initial guess of the following variables stored in the <code class="language-plaintext highlighter-rouge">TrajectoryParam</code> struct: middle steer <script type="math/tex">k_m</script>, final steer <script type="math/tex">k_f</script> and the arc length of the trajectory <script type="math/tex">s</script>.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="nc">TrajectoryParam</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="n">s</span><span class="p">;</span> <span class="c1">// path length </span>
+    <span class="kt">float</span> <span class="n">km</span><span class="p">;</span> <span class="c1">// steer in the middle</span>
+    <span class="kt">float</span> <span class="n">kf</span><span class="p">;</span><span class="c1">// final steer</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>We will be using the bicycle model as our vehicle model. So our motion model will be constrained to</p>
+
+<script type="math/tex; mode=display">z' = 
+\begin{bmatrix}
+x' \\ 
+y' \\ 
+v' \\ 
+\phi'
+\end{bmatrix} 
+= \begin{bmatrix}
+v cos( \phi)) \\ 
+v sin( \phi ))\\ 
+a \\ 
+\frac{ v \tan{ \delta } }{L}
+\end{bmatrix}</script>
+
+<p><script type="math/tex">d_s</script> is a fixed parameter that determines the number of fixed points along our trajectory to sample in generating a trajectory.</p>
+
+<h2 id="trajectory-generation">Trajectory Generation</h2>
+<p>The trajectory generation function is defined in <code class="language-plaintext highlighter-rouge">Pose2DTrajectory TrajectoryOptimizer::generateTrajectory(TrajectoryParam&amp; params, float k0)</code>.</p>
+
+<p>The time horizon <script type="math/tex">t_h</script> our initial trajectory will be given by s divided by our velocity.</p>
+
+<p>Using the three pairs of points:</p>
+
+<script type="math/tex; mode=display">(k(t), t): \{ (k_0, 0),  (k_m, \frac{t_h}{2}), (k_f, t_h)  \}</script>
+
+<p>we can recover the coefficients that represent <script type="math/tex">k(t)</script>.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">float</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span> <span class="n">xk</span> <span class="o">=</span> <span class="p">{</span><span class="mf">0.0</span><span class="n">f</span><span class="p">,</span> <span class="n">time_horizon</span><span class="o">/</span><span class="mf">2.0</span><span class="n">f</span><span class="p">,</span> <span class="n">time_horizon</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">float</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span> <span class="n">yk</span> <span class="o">=</span> <span class="p">{</span><span class="n">k0</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">km</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">kf</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">float</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span> <span class="n">coeff</span> <span class="o">=</span> <span class="n">quadraticCoefficients</span><span class="p">(</span><span class="n">xk</span><span class="p">,</span> <span class="n">yk</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Using the coefficients of <script type="math/tex">k(t)</script> we can then roll out the trajectory generated by this steer command over discretized steps.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="p">(</span><span class="kt">float</span> <span class="n">t</span> <span class="o">=</span> <span class="mf">0.</span><span class="n">f</span><span class="p">;</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">time_horizon</span><span class="p">;</span> <span class="n">t</span> <span class="o">+=</span> <span class="n">dt</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">float</span> <span class="n">steer</span> <span class="o">=</span> <span class="n">quadraticInterpolation</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">t</span><span class="p">);</span>
+        <span class="n">state</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="mf">0.0</span><span class="n">f</span><span class="p">,</span> <span class="n">steer</span><span class="p">,</span> <span class="n">dt</span><span class="p">);</span> <span class="c1">// no acc.</span>
+        <span class="n">traj</span><span class="p">.</span><span class="n">x</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+        <span class="n">traj</span><span class="p">.</span><span class="n">y</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+        <span class="n">traj</span><span class="p">.</span><span class="n">theta</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">yaw</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="compute-cost">Compute Cost</h2>
+<p>The cost calculation is done in <code class="language-plaintext highlighter-rouge">Eigen::Vector3f TrajectoryOptimizer::calculatePoseErrorVector(const Pose2D&amp; p1, const Pose2D p2)</code>. It is the sum of squared difference between each dimension <script type="math/tex">(x, y, \theta)</script> of trajectory’s final pose and our traget pose. If this value is below our threshold, then our optimization is complete. If not, we adjust <script type="math/tex">{s, k_m, k_f}</script> parameters to try to get a better trajectory.</p>
+
+<h2 id="adjust-parameters">Adjust Parameters</h2>
+<p>The trajectory’s final state can be modelled as the output of a nonlinear function <script type="math/tex">f</script>:</p>
+
+<script type="math/tex; mode=display">\begin{bmatrix}
+x_{f, traj} \\ 
+y_{f, traj} \\ 
+\theta_{f, traj} \\ 
+\end{bmatrix} = f(s, k_m, k_f)</script>
+
+<p>Our parameter update step is done via the Gauss-Newton method with line search. To obtain the Jacobian we apply the centered difference approach which computes the error vector based on small perturbations to the parameters of <script type="math/tex">f</script></p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Eigen</span><span class="o">::</span><span class="n">MatrixXf</span> <span class="n">TrajectoryOptimizer</span><span class="o">::</span><span class="n">calculateJacobian</span><span class="p">(</span><span class="n">Pose2D</span><span class="o">&amp;</span> <span class="n">target_pose</span><span class="p">,</span> <span class="n">TrajectoryParam</span><span class="o">&amp;</span> <span class="n">params</span><span class="p">,</span> <span class="kt">float</span> <span class="n">k0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// perturb each param, use centered diff to approx jacobian</span>
+    <span class="n">TrajectoryParam</span> <span class="n">params_pert</span><span class="p">;</span> 
+    <span class="n">Eigen</span><span class="o">::</span><span class="n">Vector3f</span> <span class="n">dp</span><span class="p">,</span> <span class="n">dn</span><span class="p">;</span>
+    <span class="n">Pose2D</span> <span class="n">pose_pos</span><span class="p">,</span> <span class="n">pose_neg</span><span class="p">;</span> <span class="c1">// pose from positive and negative perturbation</span>
+
+    <span class="c1">// perturb s, first col of jacobian</span>
+    <span class="n">params_pert</span> <span class="o">=</span> <span class="p">{</span><span class="n">params</span><span class="p">.</span><span class="n">s</span> <span class="o">+</span> <span class="n">delta_params_</span><span class="p">.</span><span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">km</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">kf</span><span class="p">};</span>
+    <span class="n">pose_pos</span> <span class="o">=</span> <span class="n">generateFinalState</span><span class="p">(</span><span class="n">params_pert</span><span class="p">,</span> <span class="n">k0</span><span class="p">);</span>
+    <span class="n">dp</span> <span class="o">=</span> <span class="n">calculatePoseErrorVector</span><span class="p">(</span><span class="n">target_pose</span><span class="p">,</span> <span class="n">pose_pos</span><span class="p">);</span>
+    
+    <span class="n">params_pert</span> <span class="o">=</span> <span class="p">{</span><span class="n">params</span><span class="p">.</span><span class="n">s</span> <span class="o">-</span> <span class="n">delta_params_</span><span class="p">.</span><span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">km</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">kf</span><span class="p">};</span>
+    <span class="n">pose_neg</span> <span class="o">=</span> <span class="n">generateFinalState</span><span class="p">(</span><span class="n">params_pert</span><span class="p">,</span> <span class="n">k0</span><span class="p">);</span>
+    <span class="n">dn</span> <span class="o">=</span> <span class="n">calculatePoseErrorVector</span><span class="p">(</span><span class="n">target_pose</span><span class="p">,</span> <span class="n">pose_neg</span><span class="p">);</span>
+
+    <span class="n">Eigen</span><span class="o">::</span><span class="n">Vector3f</span> <span class="n">d1</span> <span class="o">=</span> <span class="p">(</span><span class="n">dp</span> <span class="o">-</span> <span class="n">dn</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span><span class="n">f</span> <span class="o">*</span> <span class="n">delta_params_</span><span class="p">.</span><span class="n">s</span><span class="p">);</span> 
+    
+    <span class="c1">// perturb km, second col</span>
+    <span class="n">params_pert</span> <span class="o">=</span> <span class="p">{</span><span class="n">params</span><span class="p">.</span><span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">km</span> <span class="o">+</span> <span class="n">delta_params_</span><span class="p">.</span><span class="n">km</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">kf</span><span class="p">};</span>
+    <span class="n">pose_pos</span> <span class="o">=</span> <span class="n">generateFinalState</span><span class="p">(</span><span class="n">params_pert</span><span class="p">,</span> <span class="n">k0</span><span class="p">);</span>
+    <span class="n">dp</span> <span class="o">=</span> <span class="n">calculatePoseErrorVector</span><span class="p">(</span><span class="n">target_pose</span><span class="p">,</span> <span class="n">pose_pos</span><span class="p">);</span>
+    
+    <span class="n">params_pert</span> <span class="o">=</span> <span class="p">{</span><span class="n">params</span><span class="p">.</span><span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">km</span> <span class="o">-</span> <span class="n">delta_params_</span><span class="p">.</span><span class="n">km</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">kf</span><span class="p">};</span>
+    <span class="n">pose_neg</span> <span class="o">=</span> <span class="n">generateFinalState</span><span class="p">(</span><span class="n">params_pert</span><span class="p">,</span> <span class="n">k0</span><span class="p">);</span>
+    <span class="n">dn</span> <span class="o">=</span> <span class="n">calculatePoseErrorVector</span><span class="p">(</span><span class="n">target_pose</span><span class="p">,</span> <span class="n">pose_neg</span><span class="p">);</span>
+
+    <span class="n">Eigen</span><span class="o">::</span><span class="n">Vector3f</span> <span class="n">d2</span> <span class="o">=</span> <span class="p">(</span><span class="n">dp</span> <span class="o">-</span> <span class="n">dn</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span><span class="n">f</span> <span class="o">*</span> <span class="n">delta_params_</span><span class="p">.</span><span class="n">km</span><span class="p">);</span> 
+    
+    <span class="c1">// perturb kf, third col of jacobian</span>
+    <span class="n">params_pert</span> <span class="o">=</span> <span class="p">{</span><span class="n">params</span><span class="p">.</span><span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">km</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">kf</span> <span class="o">+</span> <span class="n">delta_params_</span><span class="p">.</span><span class="n">kf</span><span class="p">};</span>
+    <span class="n">pose_pos</span> <span class="o">=</span> <span class="n">generateFinalState</span><span class="p">(</span><span class="n">params_pert</span><span class="p">,</span> <span class="n">k0</span><span class="p">);</span>
+    <span class="n">dp</span> <span class="o">=</span> <span class="n">calculatePoseErrorVector</span><span class="p">(</span><span class="n">target_pose</span><span class="p">,</span> <span class="n">pose_pos</span><span class="p">);</span>
+    
+    <span class="n">params_pert</span> <span class="o">=</span> <span class="p">{</span><span class="n">params</span><span class="p">.</span><span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">km</span><span class="p">,</span> <span class="n">params</span><span class="p">.</span><span class="n">kf</span> <span class="o">-</span> <span class="n">delta_params_</span><span class="p">.</span><span class="n">kf</span><span class="p">};</span>
+    <span class="n">pose_neg</span> <span class="o">=</span> <span class="n">generateFinalState</span><span class="p">(</span><span class="n">params_pert</span><span class="p">,</span> <span class="n">k0</span><span class="p">);</span>
+    <span class="n">dn</span> <span class="o">=</span> <span class="n">calculatePoseErrorVector</span><span class="p">(</span><span class="n">target_pose</span><span class="p">,</span> <span class="n">pose_neg</span><span class="p">);</span>
+
+    <span class="n">Eigen</span><span class="o">::</span><span class="n">Vector3f</span> <span class="n">d3</span> <span class="o">=</span> <span class="p">(</span><span class="n">dp</span> <span class="o">-</span> <span class="n">dn</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span><span class="n">f</span> <span class="o">*</span> <span class="n">delta_params_</span><span class="p">.</span><span class="n">kf</span><span class="p">);</span> 
+    
+    <span class="c1">// return matrix</span>
+    <span class="n">Eigen</span><span class="o">::</span><span class="n">Matrix3f</span> <span class="n">J</span><span class="p">;</span>
+    <span class="n">J</span> <span class="o">&lt;&lt;</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">d3</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">J</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>In our line search, we apply a series of predefined learning rates to our parameter vector and compute the error in the trajectory generated by the updated parameter vector. We update our parameter vector with the learning rate that generated the lowest cost.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">float</span> <span class="n">TrajectoryOptimizer</span><span class="o">::</span><span class="n">selectLearningParam</span><span class="p">(</span><span class="n">Pose2D</span><span class="o">&amp;</span> <span class="n">target_pose</span><span class="p">,</span> <span class="n">TrajectoryParam</span> <span class="n">params</span><span class="p">,</span> <span class="kt">float</span> <span class="n">k0</span><span class="p">,</span> <span class="n">Eigen</span><span class="o">::</span><span class="n">Vector3f</span><span class="o">&amp;</span> <span class="n">dp</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="n">min_cost</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;::</span><span class="n">max</span><span class="p">();</span>
+    <span class="kt">float</span> <span class="n">min_a</span> <span class="o">=</span> <span class="n">min_alpha_</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">float</span> <span class="n">a</span> <span class="o">=</span> <span class="n">min_alpha_</span><span class="p">;</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">max_alpha_</span><span class="p">;</span> <span class="n">a</span> <span class="o">+=</span> <span class="n">d_alpha_</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">TrajectoryParam</span> <span class="n">new_params</span> <span class="o">=</span> <span class="n">params</span><span class="p">;</span>
+        <span class="n">new_params</span><span class="p">.</span><span class="n">s</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">dp</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+        <span class="n">new_params</span><span class="p">.</span><span class="n">km</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">dp</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+        <span class="n">new_params</span><span class="p">.</span><span class="n">kf</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">dp</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+        <span class="n">Pose2D</span> <span class="n">last_pose</span> <span class="o">=</span> <span class="n">generateFinalState</span><span class="p">(</span><span class="n">new_params</span><span class="p">,</span> <span class="n">k0</span><span class="p">);</span>
+        <span class="n">Eigen</span><span class="o">::</span><span class="n">Vector3f</span> <span class="n">dstate</span> <span class="o">=</span> <span class="n">calculatePoseErrorVector</span><span class="p">(</span><span class="n">target_pose</span><span class="p">,</span> <span class="n">last_pose</span><span class="p">);</span>
+        
+        <span class="kt">float</span> <span class="n">cost</span> <span class="o">=</span> <span class="n">dstate</span><span class="p">.</span><span class="n">norm</span><span class="p">();</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">cost</span> <span class="o">&lt;=</span> <span class="n">min_cost</span> <span class="o">&amp;&amp;</span> <span class="n">std</span><span class="o">::</span><span class="n">abs</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;::</span><span class="n">epsilon</span><span class="p">())</span> <span class="p">{</span>
+            <span class="n">min_a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
+            <span class="n">min_cost</span> <span class="o">=</span> <span class="n">cost</span><span class="p">;</span>
+        <span class="p">}</span>
+    
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">min_a</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>We repeat the trajectory generation-&gt;compute cost-&gt; adjust parameter cycle until we have reached a maximum number of iterations or our computer trajectory is sufficiently close to our goal.</p>
+
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Chris Chan</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:christophertzechan@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/ctfchan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/christopher-chan-592469113"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1"  href="https://medium.com/@christophertzechan"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#00ab6c'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a>
+
+</div><small id="attribution">
+    theme <a href="https://github.com/YoussefRaafatNasry/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>
