@@ -150,27 +150,19 @@ This is the difference between consecutive control inputs. The fourth term ensur
 <p>Additionally, our optimization problem is subject to the following contraints:</p>
 <ol>
   <li>
-    <p>Maximum acceleration
-<script type="math/tex">% <![CDATA[
+    <p>Maximum acceleration <script type="math/tex">% <![CDATA[
 a_t < a_{max} %]]></script></p>
   </li>
   <li>
-    <p>Maximum steering angle</p>
+    <p>Maximum steering angle <script type="math/tex">% <![CDATA[
+\delta_t < \delta_{max} %]]></script></p>
   </li>
-</ol>
-
-<script type="math/tex; mode=display">% <![CDATA[
-\delta_t < \delta_{max} %]]></script>
-
-<ol>
   <li>
-    <p>Allowable velocities
-<script type="math/tex">% <![CDATA[
+    <p>Allowable velocities <script type="math/tex">% <![CDATA[
 v_{min} < v_t < v_{max} %]]></script></p>
   </li>
   <li>
-    <p>First state in the optimization output should be equal to our current state
-<script type="math/tex">z_1 = z_{initial}</script></p>
+    <p>First state in the optimization output should be equal to our current state <script type="math/tex">z_1 = z_{initial}</script></p>
   </li>
 </ol>
 
@@ -256,7 +248,7 @@ x_1 & ... & x_T & y_1 & ... & y_T &  \phi_1 & ... & \phi_T &v_1 & ... & v_T && \
 <p>We define a struct <code class="language-plaintext highlighter-rouge">FUNC_EVAL</code> with a function 
 <code class="language-plaintext highlighter-rouge">void operator()(ADvector &amp;fg, const ADvector &amp;vars)</code> which will be called by the solver.</p>
 
-<p>Here we add the third and fourth terms in $J$ from above. We chose</p>
+<p>Here we add the third and fourth terms in <script type="math/tex">J</script> from above. We chose</p>
 
 <script type="math/tex; mode=display">% <![CDATA[
 R = 
@@ -287,7 +279,7 @@ R' =
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>Finally, we encode the first and second terms in $J$. Here we chose
+<p>Finally, we encode the first and second terms in <script type="math/tex">J</script>. Here we chose
 <script type="math/tex">% <![CDATA[
 Q = 
 \begin{bmatrix}
