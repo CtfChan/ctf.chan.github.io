@@ -62,7 +62,7 @@
 
 <p class="post-metadata text-muted">
   18 October 2020 -  
-  <b>less than 1 min read time</b>
+  <b>10 mins read time</b>
 
   <br>Tags: 
     
@@ -75,9 +75,203 @@
 
 <p>Work in Progress</p>
 
+<p>The methods outlined in this post are based on the following paper:</p>
 <ul>
-  <li>State Space Sampling of Feasible Motions for High-Performance Mobile Robot Navigation in Complex Environments  (lattice generated)</li>
+  <li>State Space Sampling of Feasible Motions for High-Performance Mobile Robot Navigation in Complex Environments</li>
 </ul>
+
+<h2 id="state-lattice-methods">State Lattice Methods</h2>
+<p>State lattice methods involve precalculating a set of feasible trajectories for your robot using a given shape parametrization. At runtime, the best trajectory can be calculated quickly based on your cost function (e.g. closeness to obstacles). The three shape parametrizations <script type="math/tex">p_{ss}</script> identified in the paper are uniform, biased and lane state sampling. In this post we will be consideration polar uniform and biased sampling.</p>
+
+<p>In all of the sampling methods below each trajectory is represented with a start pose and a goal pose. Using the lookup table for goal poses made using the trajectory generator in our previous post, we can use the <script type="math/tex">\{s, k_0, k_f\}</script> as an initial guess in our optimization for a new trajectory.</p>
+
+<h2 id="uniform-state-sampling">Uniform State Sampling</h2>
+<p>Uniform state sampling involves uniformly sampling goal poses in a cone in front of the robot.</p>
+
+<script type="math/tex; mode=display">p_{ss} =
+\begin{bmatrix}
+n_p \\
+n_h \\
+d \\
+\alpha_{min} \\
+\alpha_{max} \\
+\psi_{min} \\
+\psi_{max} \\
+\end{bmatrix}</script>
+
+<p><script type="math/tex">n_p</script> is the number samples in the terminal state position and represents the number of points along the arc to sample from.</p>
+
+<p><script type="math/tex">n_h</script> is the  terminal heading and represents the number of final orientations to sample from at each sample point.</p>
+
+<p><script type="math/tex">d</script> is the terminal position horizon and represents the radius of the cone.</p>
+
+<p><script type="math/tex">\alpha_{min}</script> and <script type="math/tex">\alpha_{max}</script> represent the angular range to sample for terminal positions.</p>
+
+<p><script type="math/tex">\psi_{min}</script> and <script type="math/tex">\psi_{max}</script> represent the angular range to sample for terminal headings.</p>
+
+<p>The green triangle represents the robot in the diagram below. With <script type="math/tex">n_h = 3</script> you can see that we generate 3 red trajectories to each blue dot.
+<img src="/assets/uniform_state_lattice.png" alt="Uniform State Sampling Diagram" /></p>
+
+<p>In <code class="language-plaintext highlighter-rouge">calculateUniformPolarStates</code>, we first generate a series of angles uniformly and then generate our target trajectory using some simple geometry in <code class="language-plaintext highlighter-rouge">sampleStates</code>.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// NOTE nxy = np in this code</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Pose2D</span><span class="o">&gt;</span> <span class="n">calculateUniformPolarStates</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">nxy</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">nh</span><span class="p">,</span> <span class="kt">float</span> <span class="n">d</span><span class="p">,</span>
+                        <span class="kt">float</span> <span class="n">a_min</span><span class="p">,</span> <span class="kt">float</span> <span class="n">a_max</span><span class="p">,</span> <span class="kt">float</span> <span class="n">p_min</span><span class="p">,</span> <span class="kt">float</span> <span class="n">p_max</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span> <span class="n">angle_samples</span><span class="p">(</span><span class="n">nxy</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nxy</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">angle_samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="n">nxy</span> <span class="o">-</span> <span class="mf">1.</span><span class="n">f</span><span class="p">);</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Pose2D</span><span class="o">&gt;</span> <span class="n">states</span> <span class="o">=</span> <span class="n">sampleStates</span><span class="p">(</span><span class="n">angle_samples</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">p_max</span><span class="p">,</span> <span class="n">p_min</span><span class="p">,</span> <span class="n">nh</span><span class="p">);</span>
+    
+    <span class="k">return</span> <span class="n">states</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Pose2D</span><span class="o">&gt;</span> <span class="n">sampleStates</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;&amp;</span> <span class="n">angle_samples</span><span class="p">,</span> <span class="kt">float</span> <span class="n">a_min</span><span class="p">,</span>
+                 <span class="kt">float</span> <span class="n">a_max</span><span class="p">,</span> <span class="kt">float</span> <span class="n">d</span><span class="p">,</span> <span class="kt">float</span> <span class="n">p_max</span><span class="p">,</span> <span class="kt">float</span> <span class="n">p_min</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">nh</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Pose2D</span><span class="o">&gt;</span> <span class="n">states</span><span class="p">;</span> 
+    
+    <span class="kt">float</span> <span class="n">xf</span><span class="p">,</span> <span class="n">yf</span><span class="p">,</span> <span class="n">yawf</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">float</span> <span class="n">i</span> <span class="o">:</span> <span class="n">angle_samples</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">float</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a_min</span> <span class="o">+</span> <span class="p">(</span><span class="n">a_max</span> <span class="o">-</span> <span class="n">a_min</span><span class="p">)</span> <span class="o">*</span> <span class="n">i</span><span class="p">;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">nh</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">xf</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="n">std</span><span class="o">::</span><span class="n">cos</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+            <span class="n">yf</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="n">std</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">nh</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">yawf</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_max</span> <span class="o">-</span> <span class="n">p_min</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="n">f</span> <span class="o">+</span> <span class="n">a</span><span class="p">;</span>
+            <span class="k">else</span> 
+                <span class="n">yawf</span> <span class="o">=</span> <span class="n">p_min</span> <span class="o">+</span> <span class="p">(</span><span class="n">p_max</span> <span class="o">-</span> <span class="n">p_min</span><span class="p">)</span> <span class="o">*</span> <span class="n">j</span> <span class="o">/</span> <span class="p">(</span><span class="n">nh</span> <span class="o">-</span> <span class="mf">1.</span><span class="n">f</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span><span class="p">;</span>
+            <span class="n">Pose2D</span> <span class="n">final_state</span> <span class="p">{</span><span class="n">xf</span><span class="p">,</span> <span class="n">yf</span><span class="p">,</span> <span class="n">yawf</span><span class="p">};</span>
+            <span class="n">states</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">final_state</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">states</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="biased-state-sampling">Biased State Sampling</h2>
+<p>The parametrization for biased state sampling is similar to uniform state sample except we add an extra term <script type="math/tex">n_s</script> which is the number of navigation function samples. This new parameter biases our sampling at points where the global cost function is lower. So more blue dots appear near our goal angle.</p>
+
+<script type="math/tex; mode=display">p_{ss} =
+\begin{bmatrix}
+n_s \\
+n_p \\
+n_h \\
+d \\
+\alpha_{min} \\
+\alpha_{max} \\
+\psi_{min} \\
+\psi_{max} \\
+\end{bmatrix}</script>
+
+<p>Below is heavily commented version of the <code class="language-plaintext highlighter-rouge">calculateBiasedPolarStates</code> code.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Pose2D</span><span class="o">&gt;</span> <span class="n">calculateBiasedPolarStates</span><span class="p">(</span><span class="kt">float</span> <span class="n">goal_angle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">ns</span><span class="p">,</span> <span class="kt">int</span> <span class="n">nxy</span><span class="p">,</span>
+                                   <span class="kt">int</span> <span class="n">nh</span><span class="p">,</span> <span class="kt">int</span> <span class="n">d</span><span class="p">,</span>
+                                   <span class="kt">float</span> <span class="n">a_min</span><span class="p">,</span> <span class="kt">float</span> <span class="n">a_max</span><span class="p">,</span>
+                                   <span class="kt">float</span> <span class="n">p_min</span><span class="p">,</span> <span class="kt">float</span> <span class="n">p_max</span><span class="p">){</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span> <span class="n">as</span><span class="p">(</span><span class="n">ns</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span> <span class="n">cnav</span><span class="p">(</span><span class="n">ns</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ns</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">as</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_min</span> <span class="o">+</span> <span class="p">(</span><span class="n">a_max</span> <span class="o">-</span> <span class="n">a_min</span><span class="p">)</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="n">ns</span> <span class="o">-</span> <span class="mf">1.</span><span class="n">f</span><span class="p">);</span> <span class="c1">// this is the angle used in uniform sampling</span>
+        <span class="n">cnav</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">M_PI</span> <span class="o">-</span> <span class="n">std</span><span class="o">::</span><span class="n">abs</span><span class="p">(</span><span class="n">as</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">goal_angle</span><span class="p">);</span> <span class="c1">// angle difference between uniformly sampled node and goal angle</span>
+    <span class="p">}</span>
+
+    <span class="c1">// sum up all the angle diffs and find max element</span>
+    <span class="kt">float</span> <span class="n">cnav_sum</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">accumulate</span><span class="p">(</span><span class="n">cnav</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">cnav</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="mf">0.</span><span class="n">f</span><span class="p">);</span>
+    <span class="kt">float</span> <span class="n">cnav_max</span> <span class="o">=</span> <span class="o">*</span><span class="n">std</span><span class="o">::</span><span class="n">max_element</span><span class="p">(</span><span class="n">cnav</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">cnav</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+
+    <span class="c1">// normalise the distribution of cnav</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">float</span><span class="o">&amp;</span> <span class="n">cnavi</span> <span class="o">:</span> <span class="n">cnav</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">cnavi</span> <span class="o">=</span> <span class="p">(</span><span class="n">cnav_max</span> <span class="o">-</span> <span class="n">cnavi</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">cnav_max</span> <span class="o">*</span> <span class="n">ns</span> <span class="o">-</span> <span class="n">cnav_sum</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// cumalative sum</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span> <span class="n">cumsum_cnav</span><span class="p">(</span><span class="n">cnav</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">partial_sum</span><span class="p">(</span><span class="n">cnav</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">cnav</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">cumsum_cnav</span><span class="p">.</span><span class="n">begin</span><span class="p">());</span>
+
+    <span class="c1">// output angles based on cumulative sume</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span> <span class="n">di</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">li</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nxy</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span> <span class="p">)</span> <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">ii</span> <span class="o">=</span> <span class="n">li</span><span class="p">;</span> <span class="n">ii</span> <span class="o">&lt;</span> <span class="n">ns</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="o">++</span><span class="n">ii</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span> <span class="n">ii</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="n">f</span><span class="o">/</span> <span class="n">ns</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="n">nxy</span> <span class="o">-</span> <span class="mf">1.</span><span class="n">f</span><span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+                <span class="n">di</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">cumsum_cnav</span><span class="p">[</span><span class="n">ii</span><span class="p">]);</span>
+                <span class="n">li</span> <span class="o">=</span> <span class="n">ii</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// use sample states as before </span>
+    <span class="k">auto</span> <span class="n">states</span> <span class="o">=</span> <span class="n">sampleStates</span><span class="p">(</span><span class="n">di</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">p_max</span><span class="p">,</span> <span class="n">p_min</span><span class="p">,</span> <span class="n">nh</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">states</span><span class="p">;</span>  
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="lane-sampling">Lane Sampling</h2>
+<p>Lane sampling samples based on the geometry of a road lane.</p>
+
+<script type="math/tex; mode=display">p_{ss} =
+\begin{bmatrix}
+l_{center} \\
+l_{heading} \\
+l_{width} \\
+v_{width} \\
+d \\
+n_{p} \\
+n_{l}
+\end{bmatrix}</script>
+
+<p><script type="math/tex">l_{center}</script> is the lane centerline.</p>
+
+<p><script type="math/tex">l_{heading}</script> is the lane heading.</p>
+
+<p><script type="math/tex">l_{width}</script> is the lane width.</p>
+
+<p><script type="math/tex">v_{width}</script> is the vehicle width.</p>
+
+<p><script type="math/tex">d</script> is the lane horizon.</p>
+
+<p><script type="math/tex">n_{p}</script> is the number of lateral offsets to sample from along the center position.</p>
+
+<p><script type="math/tex">n_{l}</script> is the number of lanes. In this example we kept this to one.</p>
+
+<p>The figure below represents how each variable is used. Our robot (green triangle) seeks to reach the red goal pose (red triangle). The robot is currently in frame a and the target pose is in frame b. <script type="math/tex">l_{heading}</script> parametrized the 2D rotation matrix to transform a point from frame b to frame a.</p>
+
+<p><img src="/assets/lane_state_lattice.png" alt="" /></p>
+
+<p>Recall a 2D rotation matrix is parametrized as follows.</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{bmatrix}
+cos(\theta)  & -sin(\theta)\\
+sin(\theta) & cos(\theta)\
+\end{bmatrix} %]]></script>
+
+<p>The function below illustrates how each of these variables are used:</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Pose2D</span><span class="o">&gt;</span> <span class="n">calculateLaneStates</span><span class="p">(</span>
+    <span class="kt">float</span> <span class="n">l_center</span><span class="p">,</span> <span class="kt">float</span> <span class="n">l_heading</span><span class="p">,</span> <span class="kt">float</span> <span class="n">l_width</span><span class="p">,</span> 
+    <span class="kt">float</span> <span class="n">v_width</span><span class="p">,</span> <span class="kt">float</span> <span class="n">d</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">nxy</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="c1">// apply rotation matrix to the points</span>
+    <span class="kt">float</span> <span class="n">xc</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="n">std</span><span class="o">::</span><span class="n">cos</span><span class="p">(</span><span class="n">l_heading</span><span class="p">)</span> <span class="o">-</span> <span class="n">l_center</span> <span class="o">*</span> <span class="n">std</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="n">l_heading</span><span class="p">);</span>
+    <span class="kt">float</span> <span class="n">yc</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="n">std</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="n">l_heading</span><span class="p">)</span> <span class="o">+</span> <span class="n">l_center</span> <span class="o">*</span> <span class="n">std</span><span class="o">::</span><span class="n">cos</span><span class="p">(</span><span class="n">l_heading</span><span class="p">);</span>
+
+    <span class="c1">// move the center point by a small delta to the left or right </span>
+    <span class="c1">// depending on how much "wiggle room" is left in the lane</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Pose2D</span><span class="o">&gt;</span> <span class="n">states</span><span class="p">;</span> <span class="n">states</span><span class="p">.</span><span class="n">reserve</span><span class="p">(</span><span class="n">nxy</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nxy</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">float</span> <span class="n">delta</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">l_width</span><span class="o">-</span><span class="n">v_width</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">l_width</span><span class="o">-</span><span class="n">v_width</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="n">nxy</span> <span class="o">-</span> <span class="mf">1.</span><span class="n">f</span><span class="p">));</span>
+        <span class="kt">float</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">xc</span> <span class="o">-</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">std</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="n">l_heading</span><span class="p">);</span>
+        <span class="kt">float</span> <span class="n">yf</span> <span class="o">=</span> <span class="n">yc</span> <span class="o">+</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">std</span><span class="o">::</span><span class="n">cos</span><span class="p">(</span><span class="n">l_heading</span><span class="p">);</span>
+        <span class="kt">float</span> <span class="n">yawf</span> <span class="o">=</span> <span class="n">l_heading</span><span class="p">;</span>
+        <span class="n">Pose2D</span> <span class="n">target_state</span><span class="p">{</span><span class="n">xf</span><span class="p">,</span> <span class="n">yf</span><span class="p">,</span> <span class="n">yawf</span><span class="p">};</span>
+        <span class="n">states</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">target_state</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">states</span><span class="p">;</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
 
 
 
