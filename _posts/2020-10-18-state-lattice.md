@@ -9,9 +9,6 @@ description: Making lots of pretty curves
         src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_CHTML"></script>
 
 
-Work in Progress
-
-
 The methods outlined in this post are based on the following paper:
 - State Space Sampling of Feasible Motions for High-Performance Mobile Robot Navigation in Complex Environments  
 
