@@ -1,10 +1,12 @@
 ---
 title: "Cpp Blog: How are executables made?"
 tags: [cpp]
-style: fill
+style:
 color:
 description: The mysteries of the compiler
 ---
+
+# How are executables made?
 
 The process of creating an executable can be broken down into a compiling and a linker stage.
 

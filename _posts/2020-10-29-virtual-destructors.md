@@ -1,10 +1,12 @@
 ---
 title: "Cpp Blog: Virtual Destructors"
 tags: [cpp]
-style: fill
+style:
 color:
 description: Why are destructors virtual?
 ---
+
+# Virtual Destructors
 
 As a general rule of thumb you should always make the destructor of your base class virtual. Why is that?
 
