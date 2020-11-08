@@ -180,10 +180,10 @@ std::array<char, 1'024> buffer();
 Send(buffer);
 ```
 
+## Constexpr if
+Constexpr ifs are compile time conditional statements. Only the branches that yield true are preserved in the final binary.
 
-constexpr if
-- compile time conditional statements
-- only the branches the yield true are preserved
+In the example below, we define a generic `getValue` function that will get the value of a variable based on whether or not it is a pointer type.
 ```cpp
 template <typname T>
 auto getValue(T t) {
@@ -201,92 +201,4 @@ auto iv = getValue(i);
 auto ipv = getValue(ip);
 auto itv = getValue(43);
 ```
-
-
-----
-
-# part 2
-
-Variadic Templates
-- variable number of arguments into templates
-- using three dots after typename
-
-
-```cpp
-template <typename T, typename... Ts>
-constexpr auto min(T& a, T&b, const Ts&... ts) {
-    const auto m = a < b ? a : b;
-    if constexpr(sizeof...(ts) > 0 ) {
-        return min(m, ts...);
-    }
-    return m;
-}
-
-static_assert( min(3,2,3,4,5) == 2);
-static_assert( min(3,2) == 2);
-
-```
-
-`typename... Ts` generates a type template parameter pack. `ts...` unpacks the argument
-
-
-
-
-Folded Expressions
-- used to unpack a parameter pack using an operation
-- all ops of the same type
-
-unary
-- right fold (pack op ...)
-- left fold (... op pack)
-
-binary
-- right fold (pack op ... op init)
-- left fold (init op ... op pack)
-
-```cpp
-template<typename T, typename... Ts>
-void Print(const T& targ, const Ts&... args)
-{
-  std::cout << targ;
-  aut coutSpaceAndArg = [](const auto& arg) {
-    std::cout << ' ' << arg;
-  };
-  (..., coutSpaceAndArg(args));
-}
-Print("hello", "C++", 20);
-```
-
-
-```cpp
-buildCSVLine
-```
-- uses left fold
-
-
-Variable templates
-- making variables templates
-```cpp
-
-
-```
-
-
-SFINAE
-- we enable with `std::enable_if_t`
--
-
-
-tag dispatch as alternative to SINFINAE
-- we use empty class tag
-
-
-
-C++ replaces most SFINAE concepts
-- using requires
-
-
-template template parameters
-- passing templates to another template
-- need to use class instead of typename
 
