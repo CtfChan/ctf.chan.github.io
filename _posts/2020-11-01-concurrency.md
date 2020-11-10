@@ -7,7 +7,9 @@ description: Doing things at the same time
 ---
 
 # Back to Basics: Concurrency
-[![](http://img.youtube.com/vi/F6Ipn7gCOsY/0.jpg)](http://www.youtube.com/watch?v=F6Ipn7gCOsY "Concurrency")
+
+[![Concurrency](http://img.youtube.com/vi/F6Ipn7gCOsY/0.jpg)](http://www.youtube.com/watch?v=F6Ipn7gCOsY "")
+
 
 These are my notes from Arthur O'Dwyer's talk from CppCon 2020 titled "Back to Basics: Concurrency".
 

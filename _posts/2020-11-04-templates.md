@@ -6,9 +6,11 @@ color:
 description: Great talk on templates
 ---
 
-[![](http://img.youtube.com/vi/VNJ4wiuxJM4/0.jpg)](http://www.youtube.com/watch?v=VNJ4wiuxJM4 "")
+# Back to Basics: Templates Part 1
 
-# Back to Basics: Templates
+[![Templates P1](http://img.youtube.com/vi/VNJ4wiuxJM4/0.jpg)](http://www.youtube.com/watch?v=VNJ4wiuxJM4 "")
+
+
 These are my notes from Andreas Fertig 's talk from CppCon 2020 titled "Back to Basics: Templates".
 
 
