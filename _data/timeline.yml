@@ -1,10 +1,9 @@
 - title: Student, University of Toronto Robotics Engineering
   from: Aug 2015
-  to: Jun 2020    
+  to: Jun 2020
   description: • Thesis = Active Learning for Deep Object Detection (with Prof. Steven Waslander) <br />
                • Relevant Courses = Mathematics for Robotics, Computer Vision for Robotics,
                  Robot Modelling and Control, Operating Systems, Mechatronics  <br />
-               • Sessional GPA = 3.95, Annual GPA = 3.87, Cumulative GPA = 3.67  <br />
 
 - title: Perception Software Development Intern, Zebra Technologies, Toronto
   from: Aug 2018
@@ -19,10 +18,10 @@
 - title: Visiting Reseacher, Australian Center for Field Robotics, Sydney
   from: May 2018
   to: Aug 2018
-  description: • Redeveloped, tested and deployed a virtual bumper system for an 
-                 autonomous electric vehicle using C++, ROS, PCL and Gtest. 
-                 The new design reduced the false positive rate of the system by over 
-                 50%. <br /> 
+  description: • Redeveloped, tested and deployed a virtual bumper system for an
+                 autonomous electric vehicle using C++, ROS, PCL and Gtest.
+                 The new design reduced the false positive rate of the system by over
+                 50%. <br />
 
 
 - title: Autonomy Software Engineer, AuToronto, Toronto
@@ -37,11 +36,10 @@
 - title: Visiting Reseacher, Lund University, Lund
   from: May 2017
   to: Aug 2017
-  description: • Developed a fully autonomous wheelchair from scratch in C++ 
-                 using the ROS navigation stack, hector_mapping, Gmapping 
+  description: • Developed a fully autonomous wheelchair from scratch in C++
+                 using the ROS navigation stack, hector_mapping, Gmapping
                  and RTAB-MAP. <br />
-               • Implemented custom PID controller as well as an odometry 
+               • Implemented custom PID controller as well as an odometry
                  update program in Arduino. <br />
 
 
-  
