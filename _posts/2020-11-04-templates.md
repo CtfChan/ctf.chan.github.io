@@ -1,7 +1,7 @@
 ---
 title: "Cpp Blog: Templates"
 tags: [cpp]
-style: fill
+style:
 color:
 description: Great talk on templates
 ---
@@ -9,7 +9,6 @@ description: Great talk on templates
 # Back to Basics: Templates Part 1
 
 [![Templates P1](http://img.youtube.com/vi/VNJ4wiuxJM4/0.jpg)](http://www.youtube.com/watch?v=VNJ4wiuxJM4 "")
-
 
 These are my notes from Andreas Fertig 's talk from CppCon 2020 titled "Back to Basics: Templates".
 

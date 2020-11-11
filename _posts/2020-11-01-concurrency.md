@@ -1,9 +1,9 @@
 ---
 title: "Cpp Blog: Conccurency"
 tags: [cpp]
-style: fill
+style:
 color:
-description: Doing things at the same time
+description: Concurrent code
 ---
 
 # Back to Basics: Concurrency
