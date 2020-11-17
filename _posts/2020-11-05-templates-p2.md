@@ -8,7 +8,7 @@ description: Great talk on templates
 
 # Back to Basics: Templates Part 2
 
-[![Templates P2](http://img.youtube.com/vi/VNJ4wiuxJM4/0.jpg)](http://www.youtube.com/watch?v=VNJ4wiuxJM4 "")
+[![](http://img.youtube.com/vi/0dtjDTEE0hQ/0.jpg)](http://www.youtube.com/watch?v=0dtjDTEE0hQ "")
 
 These are my notes from the second part of Andreas Fertig 's talk from CppCon 2020 titled "Back to Basics: Templates".
 
